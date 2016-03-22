@@ -13,9 +13,9 @@
     "demo": "python -m SimpleHTTPServer 8000",
     "dev": "node dev/index.js",
     "compile": "browserify src/dist.js -o dist/leaflet-transform.js -t [ babelify --presets [ es2015 ] --plugins [ transform-runtime ] ]",
-    "es5": "babel --presets=es2015 src/es5.js --out-file=./src/browser.js",
+    "es5": "babel --presets=es2015 -d lib/ src/",
     "minify": "uglifyjs dist/leaflet-transform.js > dist/leaflet-transform.min.js",
-    "prepublish": "npm run compile; npm run minify"
+    "prepublish": "npm run es5; npm run compile; npm run minify"
   },
   "devDependencies": {
     "babel-preset-es2015": "^6.6.0",
