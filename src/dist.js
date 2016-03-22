@@ -7,4 +7,4 @@ L.TransformPolygonWithImageOverlay = TransformPolygonWithImageOverlay;
 L.TransformImageOverlay = TransformImageOverlay;
 L.TransformPolygonWithMarkers = TransformPolygonWithMarkers;
 
-export default L;
+window.L = L;
