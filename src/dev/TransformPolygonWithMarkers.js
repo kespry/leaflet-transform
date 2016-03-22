@@ -33,7 +33,7 @@ markers.forEach(function(marker) {
         transforms: ['move', 'resize', 'rotate']
       }
     },
-    basePoints: {
+    markers: {
       icon: L.divIcon({
         className: "polygon-marker",
         iconSize: [20, 20]

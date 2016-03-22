@@ -20,12 +20,12 @@ export default L.FeatureGroup.extend({
     if(markers) {
       this._markers = L.geoJson(markers, {
         pointToLayer: function(geojson, latlng) {
-          var basePoint = new TransformMarker(latlng, group.options.basePoints, group);
-          group._polygon.addTransformLayer(basePoint);
+          var marker = new TransformMarker(latlng, group.options.markers, group);
+          group._polygon.addTransformLayer(marker);
 
-          basePoint.on('dragend', group.onDoneEditing.bind(group));
+          marker.on('dragend', group.onDoneEditing.bind(group));
 
-          return basePoint;
+          return marker;
         }
       });
 

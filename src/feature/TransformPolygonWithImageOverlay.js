@@ -1,7 +1,7 @@
 import TransformPolygonWithMarkers from './TransformPolygonWithMarkers';
 
 export default TransformPolygonWithMarkers.extend({
-  initialize: function(polygon, basePoints, options) {
+  initialize: function(polygon, markers, options) {
     TransformPolygonWithMarkers.prototype.initialize.apply(this, arguments);
 
     this._imageOverlay = new L.Edit.ImageOverlay(this._polygon, options.image);
