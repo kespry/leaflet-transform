@@ -1,6 +1,6 @@
-import L from 'leaflet';
 import TransformPolygonWithImageOverlay from './feature/TransformPolygonWithImageOverlay';
 import TransformImageOverlay from './feature/TransformImageOverlay';
 import TransformPolygonWithMarkers from './feature/TransformPolygonWithMarkers';
+import DoubleBorderPolygon from './draw/handler/DoubleBorderPolygon';
 
-export { TransformPolygonWithImageOverlay, TransformImageOverlay, TransformPolygonWithMarkers };
+export { DoubleBorderPolygon, TransformPolygonWithImageOverlay, TransformImageOverlay, TransformPolygonWithMarkers };
