@@ -1,0 +1,25 @@
+{
+  "name": "leaflet-transform",
+  "version": "0.0.1",
+  "homepage": "https://github.com/kespry/leaflet-transform",
+  "authors": [
+    "Johnathan Leppert <johnathan@kespry.com>"
+  ],
+  "description": "Transformable leaflet objects (translate, scale, rotate)",
+  "main": "src/index.js",
+  "keywords": [
+    "leaflet",
+    "transform",
+    "scale",
+    "rotate",
+    "skew"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

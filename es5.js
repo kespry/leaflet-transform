@@ -3,6 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.TransformPolygonWithMarkers = exports.TransformImageOverlay = exports.TransformPolygonWithImageOverlay = undefined;
 
 var _leaflet = require('leaflet');
 
@@ -22,8 +23,6 @@ var _TransformPolygonWithMarkers2 = _interopRequireDefault(_TransformPolygonWith
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-_leaflet2.default.TransformPolygonWithImageOverlay = _TransformPolygonWithImageOverlay2.default;
-_leaflet2.default.TransformImageOverlay = _TransformImageOverlay2.default;
-_leaflet2.default.TransformPolygonWithMarkers = _TransformPolygonWithMarkers2.default;
-
-exports.default = _leaflet2.default;
+exports.TransformPolygonWithImageOverlay = _TransformPolygonWithImageOverlay2.default;
+exports.TransformImageOverlay = _TransformImageOverlay2.default;
+exports.TransformPolygonWithMarkers = _TransformPolygonWithMarkers2.default;
