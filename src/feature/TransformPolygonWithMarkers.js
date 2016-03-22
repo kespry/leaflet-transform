@@ -1,10 +1,10 @@
 import L from 'leaflet';
 import DoubleBorderPolygon from '../draw/handler/DoubleBorderPolygon';
-import BasePoint from '../ext/BasePoint';
+import TransformMarker from '../ext/TransformMarker';
 
 export default L.FeatureGroup.extend({
   includes: [L.Mixin.Events],
-  initialize: function(polygon, basePoints, options) {
+  initialize: function(polygon, markers, options) {
     this.options = options;
     this._layers = {};
 
@@ -17,10 +17,10 @@ export default L.FeatureGroup.extend({
     }
 
     var group = this;
-    if(basePoints) {
-      this._basePoints = L.geoJson(basePoints, {
+    if(markers) {
+      this._markers = L.geoJson(markers, {
         pointToLayer: function(geojson, latlng) {
-          var basePoint = new BasePoint(latlng, group.options.basePoints, group);
+          var basePoint = new TransformMarker(latlng, group.options.basePoints, group);
           group._polygon.addTransformLayer(basePoint);
 
           basePoint.on('dragend', group.onDoneEditing.bind(group));
@@ -29,7 +29,7 @@ export default L.FeatureGroup.extend({
         }
       });
 
-      this.addLayer(this._basePoints);
+      this.addLayer(this._markers);
     }
 
     this._polygon.on('edit', group.onDoneEditing.bind(group));
@@ -53,7 +53,7 @@ export default L.FeatureGroup.extend({
   onDoneEditing: function() {
     var changes = {};
     if(this._polygon) changes.polygon = this._polygon.toGeoJSON().geometry;
-    if(this._basePoints) changes.basePoints = this._basePoints.toGeoJSON().features.pop().geometry;
+    if(this._markers) changes.markers = this._markers.toGeoJSON().features.pop().geometry;
 
     this.fire('done', changes);
   },

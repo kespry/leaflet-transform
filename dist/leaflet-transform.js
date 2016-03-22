@@ -10480,7 +10480,7 @@ var Path = _SimpleShape2.default.extend({
 
 exports.default = Path;
 
-},{"../../ext/AffineTransform":79,"../../ext/LineMarker":81,"./SimpleShape":76,"leaflet":69}],73:[function(require,module,exports){
+},{"../../ext/AffineTransform":79,"../../ext/LineMarker":80,"./SimpleShape":76,"leaflet":69}],73:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -11037,7 +11037,7 @@ var SimpleShape = _leaflet2.default.Handler.extend({
 
 exports.default = SimpleShape;
 
-},{"../../ext/MarkerExt":82,"leaflet":69}],77:[function(require,module,exports){
+},{"../../ext/MarkerExt":81,"leaflet":69}],77:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -11356,54 +11356,6 @@ exports.SetProjections = SetProjections;
 exports.Transform = Transform;
 
 },{"babel-runtime/helpers/typeof":4,"leaflet":69}],80:[function(require,module,exports){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _leaflet = require("leaflet");
-
-var _leaflet2 = _interopRequireDefault(_leaflet);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-exports.default = _leaflet2.default.Marker.extend({
-  options: {
-    draggable: true
-  },
-  initialize: function initialize(latlng, options, group) {
-    _leaflet2.default.Marker.prototype.initialize.apply(this, arguments);
-
-    this._origLatLng = latlng;
-
-    this.on("add", function () {
-      if (group.editing.state) {
-        this.dragging.enable();
-      } else {
-        this.dragging.disable();
-      }
-    });
-
-    this.on("dragend", function () {
-      this._origLatLng = this.getLatLng();
-    });
-
-    var basePoint = this;
-    group.on("edit", function (event) {
-      event.state ? basePoint.dragging.enable() : basePoint.dragging.disable();
-    });
-  },
-  applyTransform: function applyTransform(tx) {
-    if (tx) {
-      this.setLatLng(tx.apply(this._origLatLng));
-    } else {
-      this._origLatLng = this.getLatLng();
-    }
-  }
-});
-
-},{"leaflet":69}],81:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -11445,7 +11397,7 @@ exports.default = _leaflet2.default.Polyline.extend({
     }
 });
 
-},{"leaflet":69}],82:[function(require,module,exports){
+},{"leaflet":69}],81:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -11481,6 +11433,54 @@ exports.default = _leaflet2.default.Marker.extend({
         pos.y += this._dy;
         _leaflet2.default.Marker.prototype._setPos.call(this, pos);
     }
+});
+
+},{"leaflet":69}],82:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _leaflet = require("leaflet");
+
+var _leaflet2 = _interopRequireDefault(_leaflet);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+exports.default = _leaflet2.default.Marker.extend({
+  options: {
+    draggable: true
+  },
+  initialize: function initialize(latlng, options, group) {
+    _leaflet2.default.Marker.prototype.initialize.apply(this, arguments);
+
+    this._origLatLng = latlng;
+
+    this.on("add", function () {
+      if (group.editing.state) {
+        this.dragging.enable();
+      } else {
+        this.dragging.disable();
+      }
+    });
+
+    this.on("dragend", function () {
+      this._origLatLng = this.getLatLng();
+    });
+
+    var marker = this;
+    group.on("edit", function (event) {
+      event.state ? marker.dragging.enable() : marker.dragging.disable();
+    });
+  },
+  applyTransform: function applyTransform(tx) {
+    if (tx) {
+      this.setLatLng(tx.apply(this._origLatLng));
+    } else {
+      this._origLatLng = this.getLatLng();
+    }
+  }
 });
 
 },{"leaflet":69}],83:[function(require,module,exports){
@@ -11554,7 +11554,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 exports.default = _TransformPolygonWithMarkers2.default.extend({
   initialize: function initialize(polygon, basePoints, options) {
-    L.FeatureGroup.PolygonWithBasePoints.prototype.initialize.apply(this, arguments);
+    _TransformPolygonWithMarkers2.default.prototype.initialize.apply(this, arguments);
 
     this._imageOverlay = new L.Edit.ImageOverlay(this._polygon, options.image);
     this.addLayer(this._imageOverlay);
@@ -11578,15 +11578,15 @@ var _DoubleBorderPolygon = require('../draw/handler/DoubleBorderPolygon');
 
 var _DoubleBorderPolygon2 = _interopRequireDefault(_DoubleBorderPolygon);
 
-var _BasePoint = require('../ext/BasePoint');
+var _TransformMarker = require('../ext/TransformMarker');
 
-var _BasePoint2 = _interopRequireDefault(_BasePoint);
+var _TransformMarker2 = _interopRequireDefault(_TransformMarker);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 exports.default = _leaflet2.default.FeatureGroup.extend({
   includes: [_leaflet2.default.Mixin.Events],
-  initialize: function initialize(polygon, basePoints, options) {
+  initialize: function initialize(polygon, markers, options) {
     this.options = options;
     this._layers = {};
 
@@ -11599,10 +11599,10 @@ exports.default = _leaflet2.default.FeatureGroup.extend({
     }
 
     var group = this;
-    if (basePoints) {
-      this._basePoints = _leaflet2.default.geoJson(basePoints, {
+    if (markers) {
+      this._markers = _leaflet2.default.geoJson(markers, {
         pointToLayer: function pointToLayer(geojson, latlng) {
-          var basePoint = new _BasePoint2.default(latlng, group.options.basePoints, group);
+          var basePoint = new _TransformMarker2.default(latlng, group.options.basePoints, group);
           group._polygon.addTransformLayer(basePoint);
 
           basePoint.on('dragend', group.onDoneEditing.bind(group));
@@ -11611,7 +11611,7 @@ exports.default = _leaflet2.default.FeatureGroup.extend({
         }
       });
 
-      this.addLayer(this._basePoints);
+      this.addLayer(this._markers);
     }
 
     this._polygon.on('edit', group.onDoneEditing.bind(group));
@@ -11635,7 +11635,7 @@ exports.default = _leaflet2.default.FeatureGroup.extend({
   onDoneEditing: function onDoneEditing() {
     var changes = {};
     if (this._polygon) changes.polygon = this._polygon.toGeoJSON().geometry;
-    if (this._basePoints) changes.basePoints = this._basePoints.toGeoJSON().features.pop().geometry;
+    if (this._markers) changes.markers = this._markers.toGeoJSON().features.pop().geometry;
 
     this.fire('done', changes);
   },
@@ -11646,4 +11646,4 @@ exports.default = _leaflet2.default.FeatureGroup.extend({
   }
 });
 
-},{"../draw/handler/DoubleBorderPolygon":70,"../ext/BasePoint":80,"leaflet":69}]},{},[78]);
+},{"../draw/handler/DoubleBorderPolygon":70,"../ext/TransformMarker":82,"leaflet":69}]},{},[78]);

@@ -21,9 +21,9 @@ export default L.Marker.extend({
        this._origLatLng = this.getLatLng();
      });
 
-     var basePoint = this;
+     var marker = this;
      group.on("edit", function(event) {
-       event.state ? basePoint.dragging.enable() : basePoint.dragging.disable();
+       event.state ? marker.dragging.enable() : marker.dragging.disable();
      });
   },
   applyTransform: function(tx) {
