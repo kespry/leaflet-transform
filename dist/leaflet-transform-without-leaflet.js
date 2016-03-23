@@ -35,10 +35,6 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _assign = require('babel-runtime/core-js/object/assign');
-
-var _assign2 = _interopRequireDefault(_assign);
-
 var _leaflet = (window.L);
 
 var _leaflet2 = _interopRequireDefault(_leaflet);
@@ -74,12 +70,12 @@ function drawDoublePath(method) {
 
     // Primary path.
     this._path = this._primaryPath;
-    this.options = (0, _assign2.default)({}, options, this.options.primary);
+    this.options = Object.assign({}, options, this.options.primary);
     DoubleBorderPolygon.prototype[reserved + method].apply(this, arguments);
 
     // Secondary path.
     this._path = this._secondaryPath;
-    this.options = (0, _assign2.default)({}, options, this.options.secondary);
+    this.options = Object.assign({}, options, this.options.secondary);
     DoubleBorderPolygon.prototype[reserved + method].apply(this, arguments);
 
     // Restore old values.
@@ -103,7 +99,7 @@ DoubleBorderPolygon.addInitHook(function () {
 
 exports.default = DoubleBorderPolygon;
 
-},{"../../edit/handler/PolyGroup":6,"babel-runtime/core-js/object/assign":undefined}],3:[function(require,module,exports){
+},{"../../edit/handler/PolyGroup":6}],3:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -913,9 +909,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.Transform = exports.SetProjections = undefined;
 
-var _typeof2 = require('babel-runtime/helpers/typeof');
-
-var _typeof3 = _interopRequireDefault(_typeof2);
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 
 var _leaflet = (window.L);
 
@@ -962,7 +956,7 @@ function copy(o) {
     output = Array.isArray(o) ? [] : {};
     for (key in o) {
         v = o[key];
-        output[key] = (typeof v === 'undefined' ? 'undefined' : (0, _typeof3.default)(v)) === "object" ? copy(v) : v;
+        output[key] = (typeof v === 'undefined' ? 'undefined' : _typeof(v)) === "object" ? copy(v) : v;
     }
     return output;
 }
@@ -1145,7 +1139,7 @@ var Transform = _leaflet2.default.Class.extend({
 exports.SetProjections = SetProjections;
 exports.Transform = Transform;
 
-},{"babel-runtime/helpers/typeof":undefined}],11:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
