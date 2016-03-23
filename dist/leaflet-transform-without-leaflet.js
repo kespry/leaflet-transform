@@ -17,13 +17,18 @@ var _TransformPolygonWithMarkers = require('./feature/TransformPolygonWithMarker
 
 var _TransformPolygonWithMarkers2 = _interopRequireDefault(_TransformPolygonWithMarkers);
 
+var _DoubleBorderPolygon = require('./draw/handler/DoubleBorderPolygon');
+
+var _DoubleBorderPolygon2 = _interopRequireDefault(_DoubleBorderPolygon);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 _leaflet2.default.TransformPolygonWithImageOverlay = _TransformPolygonWithImageOverlay2.default;
 _leaflet2.default.TransformImageOverlay = _TransformImageOverlay2.default;
 _leaflet2.default.TransformPolygonWithMarkers = _TransformPolygonWithMarkers2.default;
+_leaflet2.default.DoubleBorderPolygon = _DoubleBorderPolygon2.default;
 
-},{"./feature/TransformImageOverlay":14,"./feature/TransformPolygonWithImageOverlay":15,"./feature/TransformPolygonWithMarkers":16}],2:[function(require,module,exports){
+},{"./draw/handler/DoubleBorderPolygon":2,"./feature/TransformImageOverlay":14,"./feature/TransformPolygonWithImageOverlay":15,"./feature/TransformPolygonWithMarkers":16}],2:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -542,18 +547,6 @@ _leaflet2.default.Polyline.addInitHook(function () {
 	if (this.options.editable) {
 		this.editing.enable();
 	}
-
-	this.on('add', function () {
-		if (this.editing && this.editing.enabled()) {
-			this.editing.addHooks();
-		}
-	});
-
-	this.on('remove', function () {
-		if (this.editing && this.editing.enabled()) {
-			this.editing.removeHooks();
-		}
-	});
 });
 
 exports.default = Poly;

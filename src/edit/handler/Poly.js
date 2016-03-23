@@ -228,18 +228,6 @@ L.Polyline.addInitHook(function () {
 	if (this.options.editable) {
 	  this.editing.enable();
 	}
-
-	this.on('add', function () {
-		if (this.editing && this.editing.enabled()) {
-			this.editing.addHooks();
-		}
-	});
-
-	this.on('remove', function () {
-		if (this.editing && this.editing.enabled()) {
-			this.editing.removeHooks();
-		}
-	});
 });
 
 export default Poly;
