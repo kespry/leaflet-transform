@@ -23,8 +23,6 @@ _leaflet2.default.TransformPolygonWithImageOverlay = _TransformPolygonWithImageO
 _leaflet2.default.TransformImageOverlay = _TransformImageOverlay2.default;
 _leaflet2.default.TransformPolygonWithMarkers = _TransformPolygonWithMarkers2.default;
 
-window.L = _leaflet2.default;
-
 },{"./feature/TransformImageOverlay":14,"./feature/TransformPolygonWithImageOverlay":15,"./feature/TransformPolygonWithMarkers":16}],2:[function(require,module,exports){
 'use strict';
 
