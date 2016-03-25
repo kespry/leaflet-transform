@@ -78,21 +78,25 @@ const SimpleShape = L.Handler.extend({
 		}
 
 		this.options.transforms.forEach(function(transform) {
-			transform = transform.toLowerCase();
-			this['_create' + transform.charAt(0).toUpperCase() + transform.slice(1) + 'Marker']();
+			typeof(transform) === 'object' ?
+				this.transforms.ui[transform.type.toLowerCase()].call(this, transform)
+					: this.transforms.ui[transform.toLowerCase()].call(this);
 		}.bind(this));
 	},
 
-	_createRotateMarker: function() {
-    // Children override
-  },
+	// children override
+	transforms: {
+		ui: {
+			move: function() {},
+			resize: function() {},
+			rotate: function() {},
+		},
 
-  _createMoveMarker: function() {
-    // Children override
-  },
-
-	_createResizeMarker: function() {
-	  // Children override
+		events: {
+			move: function() {},
+			resize: function() {},
+			rotate: function() {},
+		}
 	},
 
 	_createMarker: function (latlng, icon, dx, dy) {
@@ -146,11 +150,11 @@ const SimpleShape = L.Handler.extend({
 			latlng = marker.getLatLng();
 
 		if (marker === this._moveMarker) {
-			this._move(latlng);
+			this.transforms.events.move.call(this, latlng);
 		} else if (marker === this._rotateMarker) {
-			this._rotate(latlng);
+			this.transforms.events.rotate.call(this, latlng);
 		} else {
-      this._resize(latlng);
+			this.transforms.events.resize.call(this, latlng);
 		}
 		this._shape.redraw();
 	},
@@ -160,19 +164,7 @@ const SimpleShape = L.Handler.extend({
 		marker.setOpacity(1);
 
 		this._fireEdit();
-	},
-
-	_move: function() {
-		// Children override
-	},
-
-  _resize: function() {
-    // Children override
-  },
-
-  _rotate: function() {
-    // Children override
-  }
+	}
 });
 
 export default SimpleShape;

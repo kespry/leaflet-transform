@@ -29,9 +29,11 @@ const SimplePolyGroup = Path.extend({
   }
 });
 
-["_move", "_resize", "_rotate"].forEach(function(mouseEvent) {
-  SimplePolyGroup.prototype[mouseEvent] = function(pt) {
-    this._tx = Path.prototype[mouseEvent].apply(this, arguments);
+var transforms = SimplePolyGroup.prototype.transforms;
+["move", "resize", "rotate"].forEach(function(mouseEvent) {
+  var ev = transforms.events[mouseEvent];
+  transforms.events[mouseEvent] = function(pt) {
+    this._tx = ev.apply(this, arguments);
     this._updateTransformLayers(this._tx);
   }
 });

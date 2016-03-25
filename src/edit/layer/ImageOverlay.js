@@ -1,11 +1,29 @@
 import L from 'leaflet';
 
 export default L.ImageOverlay.extend({
-  initialize: function (polygon, options) {
+  initialize: function (options) {
 	  this._url = options.url;
-	  this._bounds = polygon.getBounds();
     L.setOptions(this, options);
+    this._initImage();
+  },
+  _initImage: function () {
+    this._image = L.DomUtil.create('img', 'leaflet-image-layer');
+    L.DomUtil.addClass(this._image, 'leaflet-zoom-hide');
+
+    this._updateOpacity();
+
+    //TODO createImage util method to remove duplication
+    L.extend(this._image, {
+      galleryimg: 'no',
+      onselectstart: L.Util.falseFn,
+      onmousemove: L.Util.falseFn,
+      onload: L.bind(this._onImageLoad, this),
+      src: this._url
+    });
+  },
+  setPolygon: function(polygon) {
     this._polygon = polygon;
+    this._bounds = polygon.getBounds();
   },
   applyTransform: function(tx) {
     if(tx) {
@@ -17,6 +35,8 @@ export default L.ImageOverlay.extend({
         [tx.getCSSTranslateString(this._origLeft), tx.getCSSTransformString(true)].join(" ");
           this._image.style[L.DomUtil.TRANSFORM] = transform;
         this._tx = tx;
+
+        this._image._leaflet_pos = tx._applyPts(this._origLeft);
     } else {
       this._lastTx = this._tx;
     }

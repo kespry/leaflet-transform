@@ -17,10 +17,12 @@ const PolyGroup = Poly.extend({
   }
 });
 
-["_move", "_resize", "_rotate"].forEach(function(mouseEvent) {
-  PolyGroup.prototype[mouseEvent] = function(pt) {
-    var tx = Poly.prototype[mouseEvent].apply(this, arguments);
-    this._updateTransformLayers(tx);
+var transforms = PolyGroup.prototype.transforms;
+["move", "resize", "rotate"].forEach(function(mouseEvent) {
+  var ev = transforms.events[mouseEvent];
+  transforms.events[mouseEvent] = function(pt) {
+    this._tx = ev.apply(this, arguments);
+    this._updateTransformLayers(this._tx);
   }
 });
 

@@ -2,6 +2,7 @@ import L from 'leaflet';
 import SimpleShape from './SimpleShape';
 import { Transform, SetProjections } from '../../ext/AffineTransform';
 import LineMarker from  '../../ext/LineMarker';
+import MoveProxy from './MoveProxy';
 
 const Path = SimpleShape.extend({
 	includes: [SetProjections],
@@ -14,40 +15,11 @@ const Path = SimpleShape.extend({
 		}.bind(this));
 	},
 
-	_createMoveMarker: function () {
-		this._moveMarker = this._createMarker(this._getCenter(), this.options.moveIcon);
-	},
-
-	_createResizeMarker: function () {
-		var corners = this._getCorners();
-
-		this._resizeMarkers = [];
-
-		for (var i = 0, l = corners.length; i < l; i++) {
-			this._resizeMarkers.push(this._createMarker(corners[i], this.options.resizeIcon));
-			this._resizeMarkers[i]._cornerIndex = i;
-		}
-	},
-
-	_createRotateMarker: function () {
-		var center = this._getCenter();
-
-		this._rotateMarker = this._createMarker(center, this.options.rotateIcon, 0, -100);
-		this._rotateLine = new LineMarker(center, 0, -100, {
-			dashArray: [10, 7],
-			color: 'black',
-			weight: 2
-		});
-		this._angle = 0;
-
-		this._bindMarker(this._rotateLine);
-		this._markerGroup.addLayer(this._rotateLine);
-	},
-
 	_onMarkerDragStart: function (e) {
 		SimpleShape.prototype._onMarkerDragStart.call(this, e);
 
 		this._origLatLngs = this._shape.getLatLngs();
+		this._origTopLeft = this._shape.getBounds().getNorthWest();
 		this._origCenter = this._getCenter();
 		this._origAngle = this._angle;
 
@@ -73,29 +45,72 @@ const Path = SimpleShape.extend({
 		post: "layerPointToLatLng"
 	},
 
-	_move: function (newCenter) {
-		var tx = new Transform(this._map, this.projectionMethods).move(this._origCenter, newCenter);
-		this._shape.setLatLngs(tx.apply(this._origLatLngs));
-		this._repositionAllMarkers();
+	transforms: {
+		ui: {
+			move: function(options) {
+				if(options.proxy) {
+					this._moveMarker = MoveProxy.call(this, options);
 
-		return tx;
-	},
+					this.getMovePoint = function() {
+						return this._origTopLeft;
+					}.bind(this);
+					this._bindMarker(this._moveMarker);
+				} else {
+					this._moveMarker = this._createMarker(this._getCenter(), this.options.moveIcon);
+				}
+			},
+			resize: function() {
+				var corners = this._getCorners();
 
-	_resize: function (latlng) {
-		var tx = new Transform(this._map, this.projectionMethods).resize(this._oppositeCorner, this._currentCorner, latlng);
-		this._shape.setLatLngs(tx.apply(this._origLatLngs));
-		this._repositionAllMarkers();
+				this._resizeMarkers = [];
 
-		return tx;
-	},
+				for (var i = 0, l = corners.length; i < l; i++) {
+					this._resizeMarkers.push(this._createMarker(corners[i], this.options.resizeIcon));
+					this._resizeMarkers[i]._cornerIndex = i;
+				}
+			},
+			rotate: function() {
+				var center = this._getCenter();
 
-	_rotate: function (latlng) {
-		var tx = new Transform(this._map, this.projectionMethods).rotateFrom(this._origAngle - Math.PI/2, this._origCenter, latlng);
-		this._angle = this._origAngle + tx.getAngle();
-		this._shape.setLatLngs(tx.apply(this._origLatLngs));
-		this._repositionAllMarkers();
+				this._rotateMarker = this._createMarker(center, this.options.rotateIcon, 0, -100);
+				this._rotateLine = new LineMarker(center, 0, -100, {
+					dashArray: [10, 7],
+					color: 'black',
+					weight: 2
+				});
+				this._angle = 0;
 
-		return tx;
+				this._bindMarker(this._rotateLine);
+				this._markerGroup.addLayer(this._rotateLine);
+			}
+		},
+		getMovePoint: function() {
+			return this._origCenter();
+		},
+		events: {
+			move: function (newPos) {
+				var tx = new Transform(this._map, this.projectionMethods).move(this.getMovePoint(), newPos);
+				this._shape.setLatLngs(tx.apply(this._origLatLngs));
+				this._repositionAllMarkers();
+
+				return tx;
+			},
+			resize: function(latlng) {
+				var tx = new Transform(this._map, this.projectionMethods).resize(this._oppositeCorner, this._currentCorner, latlng);
+				this._shape.setLatLngs(tx.apply(this._origLatLngs));
+				this._repositionAllMarkers();
+
+				return tx;
+			},
+			rotate: function(latlng) {
+				var tx = new Transform(this._map, this.projectionMethods).rotateFrom(this._origAngle - Math.PI/2, this._origCenter, latlng);
+				this._angle = this._origAngle + tx.getAngle();
+				this._shape.setLatLngs(tx.apply(this._origLatLngs));
+				this._repositionAllMarkers();
+
+				return tx;
+			},
+		}
 	},
 
 	_getCorners: function () {
