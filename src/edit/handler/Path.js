@@ -48,7 +48,7 @@ const Path = SimpleShape.extend({
 	transforms: {
 		ui: {
 			move: function(options) {
-				if(options.proxy) {
+				if(options && options.proxy) {
 					this._moveMarker = MoveProxy.call(this, options);
 
 					this.getMovePoint = function() {

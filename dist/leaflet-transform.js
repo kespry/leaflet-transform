@@ -10445,7 +10445,7 @@ var Path = _SimpleShape2.default.extend({
 	transforms: {
 		ui: {
 			move: function move(options) {
-				if (options.proxy) {
+				if (options && options.proxy) {
 					this._moveMarker = _MoveProxy2.default.call(this, options);
 
 					this.getMovePoint = function () {
