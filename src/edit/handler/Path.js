@@ -45,6 +45,10 @@ const Path = SimpleShape.extend({
 		post: "layerPointToLatLng"
 	},
 
+	getMovePoint: function() {
+		return this._origCenter;
+	},
+
 	transforms: {
 		ui: {
 			move: function(options) {
@@ -83,9 +87,6 @@ const Path = SimpleShape.extend({
 				this._bindMarker(this._rotateLine);
 				this._markerGroup.addLayer(this._rotateLine);
 			}
-		},
-		getMovePoint: function() {
-			return this._origCenter();
 		},
 		events: {
 			move: function (newPos) {
@@ -140,7 +141,7 @@ const Path = SimpleShape.extend({
 		}
 
 		if(this._moveMarker) {
-			this._moveMarker.setLatLng(this._getCenter());
+			this._moveMarker.setLatLng(this.getMovePoint());
 		}
 
 		if(this._rotateMarker) {
