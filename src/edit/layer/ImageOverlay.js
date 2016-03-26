@@ -56,5 +56,6 @@ export default L.ImageOverlay.extend({
     image.style.transformOrigin = '0 0 0';
 
     L.DomUtil.setPosition(image, topLeft);
+    delete this._lastTx;
   }
 });
