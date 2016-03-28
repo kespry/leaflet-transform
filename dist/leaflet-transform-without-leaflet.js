@@ -1271,6 +1271,12 @@ var Path = _SimpleShape2.default.extend({
 		post: "layerPointToLatLng"
 	},
 
+	getMovePoint: function getMovePoint() {
+		return this._origCenter;
+	},
+
+	_updateTransformLayers: function _updateTransformLayers() {},
+
 	transforms: {
 		ui: {
 			move: function move(options) {
@@ -1310,14 +1316,13 @@ var Path = _SimpleShape2.default.extend({
 				this._markerGroup.addLayer(this._rotateLine);
 			}
 		},
-		getMovePoint: function getMovePoint() {
-			return this._origCenter();
-		},
 		events: {
 			move: function move(newPos) {
 				var tx = new _AffineTransform.Transform(this._map, this.projectionMethods).move(this.getMovePoint(), newPos);
 				this._shape.setLatLngs(tx.apply(this._origLatLngs));
 				this._repositionAllMarkers();
+
+				this._updateTransformLayers(tx);
 
 				return tx;
 			},
@@ -1326,6 +1331,8 @@ var Path = _SimpleShape2.default.extend({
 				this._shape.setLatLngs(tx.apply(this._origLatLngs));
 				this._repositionAllMarkers();
 
+				this._updateTransformLayers(tx);
+
 				return tx;
 			},
 			rotate: function rotate(latlng) {
@@ -1333,6 +1340,8 @@ var Path = _SimpleShape2.default.extend({
 				this._angle = this._origAngle + tx.getAngle();
 				this._shape.setLatLngs(tx.apply(this._origLatLngs));
 				this._repositionAllMarkers();
+
+				this._updateTransformLayers(tx);
 
 				return tx;
 			}
@@ -1366,7 +1375,7 @@ var Path = _SimpleShape2.default.extend({
 		}
 
 		if (this._moveMarker) {
-			this._moveMarker.setLatLng(this._getCenter());
+			this._moveMarker.setLatLng(this.getMovePoint());
 		}
 
 		if (this._rotateMarker) {
@@ -1668,15 +1677,6 @@ var PolyGroup = _Poly2.default.extend({
   }
 });
 
-var transforms = PolyGroup.prototype.transforms;
-["move", "resize", "rotate"].forEach(function (mouseEvent) {
-  var ev = transforms.events[mouseEvent];
-  transforms.events[mouseEvent] = function (pt) {
-    this._tx = ev.apply(this, arguments);
-    this._updateTransformLayers(this._tx);
-  };
-});
-
 _leaflet2.default.Polygon.include({
   addTransformLayer: function addTransformLayer(layer) {
     this._transformLayers.push(layer);
@@ -1732,15 +1732,6 @@ var SimplePolyGroup = _Path2.default.extend({
       layer.applyTransform(tx);
     }
   }
-});
-
-var transforms = SimplePolyGroup.prototype.transforms;
-["move", "resize", "rotate"].forEach(function (mouseEvent) {
-  var ev = transforms.events[mouseEvent];
-  transforms.events[mouseEvent] = function (pt) {
-    this._tx = ev.apply(this, arguments);
-    this._updateTransformLayers(this._tx);
-  };
 });
 
 _leaflet2.default.Polygon.include({
@@ -2004,6 +1995,7 @@ exports.default = _leaflet2.default.ImageOverlay.extend({
     image.style.transformOrigin = '0 0 0';
 
     _leaflet2.default.DomUtil.setPosition(image, topLeft);
+    delete this._lastTx;
   }
 });
 
