@@ -17,15 +17,6 @@ const PolyGroup = Poly.extend({
   }
 });
 
-var transforms = PolyGroup.prototype.transforms;
-["move", "resize", "rotate"].forEach(function(mouseEvent) {
-  var ev = transforms.events[mouseEvent];
-  transforms.events[mouseEvent] = function(pt) {
-    this._tx = ev.apply(this, arguments);
-    this._updateTransformLayers(this._tx);
-  }
-});
-
 L.Polygon.include({
   addTransformLayer: function(layer) {
     this._transformLayers.push(layer);

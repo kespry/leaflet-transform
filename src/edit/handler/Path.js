@@ -49,6 +49,8 @@ const Path = SimpleShape.extend({
 		return this._origCenter;
 	},
 
+	_updateTransformLayers: function() {},
+
 	transforms: {
 		ui: {
 			move: function(options) {
@@ -94,12 +96,16 @@ const Path = SimpleShape.extend({
 				this._shape.setLatLngs(tx.apply(this._origLatLngs));
 				this._repositionAllMarkers();
 
+				this._updateTransformLayers(tx);
+
 				return tx;
 			},
 			resize: function(latlng) {
 				var tx = new Transform(this._map, this.projectionMethods).resize(this._oppositeCorner, this._currentCorner, latlng);
 				this._shape.setLatLngs(tx.apply(this._origLatLngs));
 				this._repositionAllMarkers();
+
+				this._updateTransformLayers(tx);
 
 				return tx;
 			},
@@ -108,6 +114,8 @@ const Path = SimpleShape.extend({
 				this._angle = this._origAngle + tx.getAngle();
 				this._shape.setLatLngs(tx.apply(this._origLatLngs));
 				this._repositionAllMarkers();
+
+				this._updateTransformLayers(tx);
 
 				return tx;
 			},
