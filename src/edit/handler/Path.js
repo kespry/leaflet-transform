@@ -47,6 +47,10 @@ const Path = SimpleShape.extend({
 	},
 
 	getMovePoint: function() {
+		if(!this._origCenter) {
+			this._origCenter = this._getCenter();
+		}
+
 		return this._origCenter;
 	},
 
@@ -150,7 +154,6 @@ const Path = SimpleShape.extend({
 		}
 
 		if(this._moveMarker) {
-			//debugger;
 			this._moveMarker.setLatLng(this.getMovePoint());
 		}
 

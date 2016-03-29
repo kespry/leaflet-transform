@@ -1273,6 +1273,10 @@ var Path = _SimpleShape2.default.extend({
 	},
 
 	getMovePoint: function getMovePoint() {
+		if (!this._origCenter) {
+			this._origCenter = this._getCenter();
+		}
+
 		return this._origCenter;
 	},
 
@@ -1376,7 +1380,6 @@ var Path = _SimpleShape2.default.extend({
 		}
 
 		if (this._moveMarker) {
-			//debugger;
 			this._moveMarker.setLatLng(this.getMovePoint());
 		}
 
