@@ -1260,6 +1260,7 @@ var Path = _SimpleShape2.default.extend({
 	},
 
 	_onMarkerDragEnd: function _onMarkerDragEnd(e) {
+		this._origCenter = this._getCenter();
 		this._toggleCornerMarkers(1);
 		this._repositionAllMarkers();
 
@@ -1375,6 +1376,7 @@ var Path = _SimpleShape2.default.extend({
 		}
 
 		if (this._moveMarker) {
+			//debugger;
 			this._moveMarker.setLatLng(this.getMovePoint());
 		}
 

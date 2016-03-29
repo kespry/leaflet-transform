@@ -34,6 +34,7 @@ const Path = SimpleShape.extend({
 	},
 
 	_onMarkerDragEnd: function (e) {
+		this._origCenter = this._getCenter();
 		this._toggleCornerMarkers(1);
 		this._repositionAllMarkers();
 
@@ -149,6 +150,7 @@ const Path = SimpleShape.extend({
 		}
 
 		if(this._moveMarker) {
+			//debugger;
 			this._moveMarker.setLatLng(this.getMovePoint());
 		}
 
