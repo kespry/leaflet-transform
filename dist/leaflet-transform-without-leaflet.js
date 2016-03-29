@@ -1370,6 +1370,12 @@ var Path = _SimpleShape2.default.extend({
 		}
 	},
 
+	_repositionMoveMarker: function _repositionMoveMarker() {
+		if (this._moveMarker) {
+			this._moveMarker.setLatLng(this._getCenter());
+		}
+	},
+
 	_repositionAllMarkers: function _repositionAllMarkers() {
 		var corners = this._getCorners();
 
@@ -1506,6 +1512,7 @@ var Poly = _Path2.default.extend({
 		this._shape.getLatLngs()[marker._index] = marker._latlng;
 		this._shape.redraw();
 		this._repositionAllMarkers();
+		this._repositionMoveMarker();
 	},
 
 	_onMarkerClick: function _onMarkerClick(e) {

@@ -83,6 +83,7 @@ const Poly = Path.extend({
 		this._shape.getLatLngs()[marker._index] = marker._latlng;
 		this._shape.redraw();
 		this._repositionAllMarkers();
+		this._repositionMoveMarker();
 	},
 
 	_onMarkerClick: function(e) {

@@ -144,6 +144,12 @@ const Path = SimpleShape.extend({
 		}
 	},
 
+	_repositionMoveMarker: function() {
+		if(this._moveMarker) {
+			this._moveMarker.setLatLng(this._getCenter());
+		}
+	},
+
 	_repositionAllMarkers: function () {
 		var corners = this._getCorners();
 
