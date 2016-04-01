@@ -6,8 +6,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "leaflet": "^0.7.7",
-    "leaflet-draw": "^0.2.4",
+    "leaflet": "0.7.7",
+    "leaflet-draw": "0.2.4",
     "babel-runtime": "^6.6.1"
   },
   "scripts": {
