@@ -1,7 +1,7 @@
 import TransformPolygonWithImageOverlay from './feature/TransformPolygonWithImageOverlay';
 import TransformImageOverlay from './feature/TransformImageOverlay';
 import TransformPolygonWithMarkers from './feature/TransformPolygonWithMarkers';
-import DoubleBorderPolygon from './draw/handler/DoubleBorderPolygon';
+import DoublePolygon from './draw/handler/DoublePolygon';
 import ImageOverlay from './edit/layer/ImageOverlay';
 
-export { DoubleBorderPolygon, TransformPolygonWithImageOverlay, TransformImageOverlay, TransformPolygonWithMarkers, ImageOverlay };
+export { DoublePolygon, TransformPolygonWithImageOverlay, TransformImageOverlay, TransformPolygonWithMarkers, ImageOverlay };

@@ -1,5 +1,5 @@
 import L from 'leaflet';
-import DoubleBorderPolygon from '../draw/handler/DoubleBorderPolygon';
+import DoublePolygon from '../draw/handler/DoublePolygon';
 import TransformMarker from '../ext/TransformMarker';
 
 export default L.FeatureGroup.extend({
@@ -9,7 +9,7 @@ export default L.FeatureGroup.extend({
     this._layers = {};
 
     if(polygon) {
-      this._polygon = new DoubleBorderPolygon(polygon.coordinates[0].map(function(coord) {
+      this._polygon = new DoublePolygon(polygon.coordinates[0].map(function(coord) {
         return L.latLng(coord[1], coord[0]);
       }), this.options.polygon);
 
