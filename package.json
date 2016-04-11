@@ -2,7 +2,7 @@
   "name": "leaflet-transform",
   "version": "0.0.1",
   "description": "Transformable leaflet objects (translate, scale, rotate)",
-  "main": "src/index.js",
+  "main": "lib/index.js",
   "author": "",
   "license": "ISC",
   "dependencies": {
