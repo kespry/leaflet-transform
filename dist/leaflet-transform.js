@@ -10222,16 +10222,21 @@ var _DoublePolygon = require('./draw/handler/DoublePolygon');
 
 var _DoublePolygon2 = _interopRequireDefault(_DoublePolygon);
 
+var _DoublePolyline = require('./draw/handler/DoublePolyline');
+
+var _DoublePolyline2 = _interopRequireDefault(_DoublePolyline);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 _leaflet2.default.TransformPolygonWithImageOverlay = _TransformPolygonWithImageOverlay2.default;
 _leaflet2.default.TransformImageOverlay = _TransformImageOverlay2.default;
 _leaflet2.default.TransformPolygonWithMarkers = _TransformPolygonWithMarkers2.default;
 _leaflet2.default.DoublePolygon = _DoublePolygon2.default;
+_leaflet2.default.DoublePolyline = _DoublePolyline2.default;
 
 window.L = _leaflet2.default;
 
-},{"./draw/handler/DoublePolygon":72,"./feature/TransformImageOverlay":85,"./feature/TransformPolygonWithImageOverlay":86,"./feature/TransformPolygonWithMarkers":87,"leaflet":69}],71:[function(require,module,exports){
+},{"./draw/handler/DoublePolygon":72,"./draw/handler/DoublePolyline":73,"./feature/TransformImageOverlay":86,"./feature/TransformPolygonWithImageOverlay":87,"./feature/TransformPolygonWithMarkers":88,"leaflet":69}],71:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -10313,7 +10318,7 @@ DoubleMixin.addInitHook(function () {
 
 exports.default = DoubleMixin.prototype;
 
-},{"../../edit/handler/PolyGroup":77,"babel-runtime/core-js/object/assign":1,"leaflet":69}],72:[function(require,module,exports){
+},{"../../edit/handler/PolyGroup":78,"babel-runtime/core-js/object/assign":1,"leaflet":69}],72:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -10336,6 +10341,28 @@ exports.default = _leaflet2.default.Polygon.extend({
 });
 
 },{"./DoubleMixin":71,"leaflet":69}],73:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _leaflet = require("leaflet");
+
+var _leaflet2 = _interopRequireDefault(_leaflet);
+
+var _DoubleMixin = require("./DoubleMixin");
+
+var _DoubleMixin2 = _interopRequireDefault(_DoubleMixin);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+exports.default = _leaflet2.default.Polyline.extend({
+  parentClass: _leaflet2.default.Polyline,
+  includes: _DoubleMixin2.default
+});
+
+},{"./DoubleMixin":71,"leaflet":69}],74:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -10369,7 +10396,7 @@ HiddenPath.addInitHook(function () {
 
 exports.default = HiddenPath;
 
-},{"../../edit/handler/SimplePolyGroup":78,"leaflet":69}],74:[function(require,module,exports){
+},{"../../edit/handler/SimplePolyGroup":79,"leaflet":69}],75:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -10403,7 +10430,7 @@ var DragProxy = _leaflet2.default.Draggable.extend({
 
 ;
 
-},{"leaflet":69}],75:[function(require,module,exports){
+},{"leaflet":69}],76:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -10613,7 +10640,7 @@ var Path = _SimpleShape2.default.extend({
 
 exports.default = Path;
 
-},{"../../ext/AffineTransform":81,"../../ext/LineMarker":82,"./MoveProxy":74,"./SimpleShape":79,"leaflet":69}],76:[function(require,module,exports){
+},{"../../ext/AffineTransform":82,"../../ext/LineMarker":83,"./MoveProxy":75,"./SimpleShape":80,"leaflet":69}],77:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -10856,7 +10883,7 @@ _leaflet2.default.Polyline.addInitHook(function () {
 
 exports.default = Poly;
 
-},{"./Path":75,"leaflet":69}],77:[function(require,module,exports){
+},{"./Path":76,"leaflet":69}],78:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -10901,7 +10928,7 @@ _leaflet2.default.Polygon.addInitHook(function () {
 
 exports.default = PolyGroup;
 
-},{"./Poly":76,"leaflet":69}],78:[function(require,module,exports){
+},{"./Poly":77,"leaflet":69}],79:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -10958,7 +10985,7 @@ _leaflet2.default.Polygon.addInitHook(function () {
 
 exports.default = SimplePolyGroup;
 
-},{"./Path":75,"leaflet":69}],79:[function(require,module,exports){
+},{"./Path":76,"leaflet":69}],80:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -11139,7 +11166,7 @@ var SimpleShape = _leaflet2.default.Handler.extend({
 
 exports.default = SimpleShape;
 
-},{"../../ext/MarkerExt":83,"babel-runtime/helpers/typeof":4,"leaflet":69}],80:[function(require,module,exports){
+},{"../../ext/MarkerExt":84,"babel-runtime/helpers/typeof":4,"leaflet":69}],81:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -11211,7 +11238,7 @@ exports.default = _leaflet2.default.ImageOverlay.extend({
   }
 });
 
-},{"leaflet":69}],81:[function(require,module,exports){
+},{"leaflet":69}],82:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -11451,7 +11478,7 @@ var Transform = _leaflet2.default.Class.extend({
 exports.SetProjections = SetProjections;
 exports.Transform = Transform;
 
-},{"babel-runtime/helpers/typeof":4,"leaflet":69}],82:[function(require,module,exports){
+},{"babel-runtime/helpers/typeof":4,"leaflet":69}],83:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -11493,7 +11520,7 @@ exports.default = _leaflet2.default.Polyline.extend({
     }
 });
 
-},{"leaflet":69}],83:[function(require,module,exports){
+},{"leaflet":69}],84:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -11531,7 +11558,7 @@ exports.default = _leaflet2.default.Marker.extend({
     }
 });
 
-},{"leaflet":69}],84:[function(require,module,exports){
+},{"leaflet":69}],85:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -11579,7 +11606,7 @@ exports.default = _leaflet2.default.Marker.extend({
   }
 });
 
-},{"leaflet":69}],85:[function(require,module,exports){
+},{"leaflet":69}],86:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -11647,7 +11674,7 @@ exports.default = _leaflet2.default.FeatureGroup.extend({
   }
 });
 
-},{"../draw/handler/HiddenPath":73,"../edit/layer/ImageOverlay":80,"leaflet":69}],86:[function(require,module,exports){
+},{"../draw/handler/HiddenPath":74,"../edit/layer/ImageOverlay":81,"leaflet":69}],87:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -11671,7 +11698,7 @@ exports.default = _TransformPolygonWithMarkers2.default.extend({
   }
 });
 
-},{"./TransformPolygonWithMarkers":87}],87:[function(require,module,exports){
+},{"./TransformPolygonWithMarkers":88}],88:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -11754,4 +11781,4 @@ exports.default = _leaflet2.default.FeatureGroup.extend({
   }
 });
 
-},{"../draw/handler/DoublePolygon":72,"../ext/TransformMarker":84,"leaflet":69}]},{},[70]);
+},{"../draw/handler/DoublePolygon":72,"../ext/TransformMarker":85,"leaflet":69}]},{},[70]);
