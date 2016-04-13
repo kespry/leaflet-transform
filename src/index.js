@@ -5,6 +5,7 @@ import DoubleBorderPolygon from './draw/handler/DoubleBorderPolygon';
 import ImageOverlay from './edit/layer/ImageOverlay';
 import HiddenPathPolygon from './draw/handler/HiddenPath';
 import CanvasPDF from './layer/render/CanvasPDF';
+import SVGPDF from './layer/render/SVGPDF';
 import TransformOverlay from './feature/TransformOverlay';
 
 export {
@@ -15,5 +16,6 @@ export {
   ImageOverlay,
   HiddenPathPolygon,
   CanvasPDF,
-  TransformOverlay
+  TransformOverlay,
+  SVGPDF
 };

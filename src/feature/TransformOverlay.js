@@ -7,17 +7,18 @@ export default L.FeatureGroup.extend({
     this._layers = {};
     options = options || {};
 
-    this._overlay = new Overlay(bounds, {
+
+      this._polygon = this._createPathGeometry(bounds, options.path);
+
+      this.addLayer(this._polygon);
+
+
+    this._overlay = new Overlay(this._polygon, {
       renderer: options.renderer.type,
       url: options.url
     });
-    this.addLayer(this._overlay);
-
-    if(bounds) {
-      this._polygon = this._createPathGeometry(bounds, options.path);
       this._polygon.addTransformLayer(this._overlay);
-      this.addLayer(this._polygon);
-    }
+    this.addLayer(this._overlay);
 
     console.log('added poly!');
 
