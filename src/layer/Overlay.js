@@ -7,8 +7,9 @@ export default L.Class.extend({
 		opacity: 1
 	},
 
-	initialize: function (bounds, options) {
-		this._bounds = L.latLngBounds(bounds);
+	initialize: function (polygon, options) {
+    this._polygon = polygon;
+		this._bounds = L.latLngBounds(polygon.getBounds());
 		L.setOptions(this, options);
 	},
 
@@ -26,6 +27,8 @@ export default L.Class.extend({
 		if (map.options.zoomAnimation && L.Browser.any3d) {
 			map.on('zoomanim', this._animateZoom, this);
 		}
+
+		map.on('zoomend', this._zoomEnd, this);
 
 		this._reset();
 	},
@@ -96,7 +99,7 @@ export default L.Class.extend({
   },
 
 	_animateZoom: function (e) {
-		var map = this._map,
+		/*var map = this._map,
 		    el = this._el,
 		    scale = map.getZoomScale(e.zoom),
 		    nw = this._bounds.getNorthWest(),
@@ -107,19 +110,55 @@ export default L.Class.extend({
 		    origin = topLeft._add(size._multiplyBy((1 / 2) * (1 - 1 / scale)));
 
 		el.style[L.DomUtil.TRANSFORM] =
-		        L.DomUtil.getTranslateString(origin) + ' scale(' + scale + ') ';
+		        L.DomUtil.getTranslateString(origin) + ' scale(' + scale + ') ';*/
+
+	},
+
+	 _undef: function(a){ return typeof a == "undefined" },
+
+	_zoomEnd: function(e) {
+		/*var newZoom = this._undef(ev.zoom) ? this._map._zoom : ev.zoom;
+		this._zoomDiff = newZoom - this._zoom;
+  	this._scale = Math.pow(2, this._zoomDiff);
+
+		var shift = this._map.latLngToLayerPoint(this._origLeft)
+			._subtract(this._origLeftPx.multiplyBy(this._scale));
+
+		console.log('zoom end!', newZoom, this._zoomDiff, this._scale, shift);*/
+
+		//console.log('last zoom', this._lastZoom, 'current zoom', this._map.getZoom());
+		//var scale = this._map.getZoomScale(this._lastZoom);
+		//console.log('called zoom end!', scale);
+
+		//this._lastZoom = this._map.getZoom();
 	},
 
 	_reset: function () {
 		var el   = this._el,
-		    topLeft = this._map.latLngToLayerPoint(this._bounds.getNorthWest()),
-		    size = this._map.latLngToLayerPoint(this._bounds.getSouthEast())._subtract(topLeft);
+		    topLeft = this._map.latLngToLayerPoint(this._polygon.getBounds().getNorthWest()),
+		    size = this._map.latLngToLayerPoint(this._polygon.getBounds().getSouthEast())._subtract(topLeft);
 
-		L.DomUtil.setPosition(el, topLeft);
+    el.style.width  = size.x + 'px';
+    el.style.height = size.y + 'px';
 
     this._origLeft = topLeft;
+		//this._origLeftPx =  this._map.latLngToLayerPoint(this._wgsOrigin);
     el.style.transformOrigin = '0 0 0';
 
+    var tx = this._lastTx;
+
+    if(tx) {
+      var transform =
+        [tx.getCSSTranslateString(this._origLeft), tx.getCSSTransformString(false)].join(" ");
+          this._el.style[L.DomUtil.TRANSFORM] = transform;
+        this._el._leaflet_pos = tx._applyPts(this._origLeft);
+          //  delete this._lastTx;
+
+    } else {
+      L.DomUtil.setPosition(el, topLeft);
+    }
+
+		if(!this._zoom) this._zoom = this._map.getZoom();
 		this._renderer.render(this._pageNumber, size);
 	},
 

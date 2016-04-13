@@ -88,6 +88,50 @@ const Transform = L.Class.extend({
     }
   },
 
+  inverted: function() {
+    var inverted = new Transform(this._map, this._options), dt = this.determinant();
+
+    if(this._compareFloat(dt, 0)) {
+      throw "Not invertible";
+    }
+
+    var tx = this.getTransform();
+    inverted.setTransform(
+      tx.d / dt,
+      -tx.b / dt,
+      -tx.c / dt,
+      tx.a / dt,
+      (tx.c * tx.f - tx.d * tx.e) / dt,
+      -(tx.a * tx.f - tx.b * tx.e) / dt
+   );
+
+    return inverted;
+  },
+
+  _compareFloat: function(f1, f2) {
+    return Math.abs(f1 - f2) < 1e-14;
+  },
+
+  determinant: function() {
+    var tx = this.getTransform();
+    return tx.a * tx.d - tx.b * tx.c;
+  },
+
+  setTransform: function(a, b, c, d, e, f) {
+    this._array = [[a, b, c], [d, e, f], [0, 0, 1]];
+  },
+
+  getTransform: function() {
+    return {
+      a: this._array[0][0],
+      b: this._array[0][1],
+      c: this._array[0][2],
+      d: this._array[1][0],
+      e: this._array[1][1],
+      f: this._array[1][2]
+    };
+  },
+
 	applyTransform: function(tx) {
 		this._array = this._multiply(tx._array, this._array);
 
@@ -157,16 +201,13 @@ const Transform = L.Class.extend({
       pt1 = this._pre(pt1);
       pt2 = this._pre(pt2);
 
-      // translate so the opposite corner becomes the new origin
       this.translate(-origin.x, -origin.y);
 
-      // resizing by moving corner pt1 to pt2 is now a simple scale operation along x and y-axis
       var f = this._applyPts(pt1);
       var t = this._applyPts(pt2);
       var scaleX = (t.x / f.x);
       var scaleY = (t.y / f.y);
 
-      // guard against zero-division or too small values
       if(!isFinite(scaleX) || Math.abs(scaleX) < 1E-7) {
           scaleX = 1;
       }
@@ -224,5 +265,18 @@ const Transform = L.Class.extend({
       return result;
   }
 });
+
+Transform.fromTriangles = function(t1, t2) {
+  var _t1 = this._pre(t1), _t2 = this._pre(t2), m1 = new Transform(this._map, options), m2 = new Transform(this._map, options);
+
+  var rx1 = _t1[2].x, ry1 = _t1[2].y, rx2 = _t2[2].x, ry2 = _t2[2].y;
+  r1 = [_t1[0].x - rx1, _t1[0].y - ry1, _t1[1].x - rx1, _t1[1].y - ry1, rx1, ry1];
+  r2 = [_t2[0].x - rx2, _t2[0].y - ry2, _t2[1].x - rx2, _t2[1].y - ry2, rx2, ry2];
+
+  m1.setTransform.apply(m1, r1);
+  m2.setTransform.apply(m2, r2);
+
+  return m2.applyTransform(m1.inverted());
+};
 
 export { SetProjections, Transform };
