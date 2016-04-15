@@ -30,6 +30,14 @@ export default L.Class.extend({
 
 		map.on('zoomend', this._zoomEnd, this);
 
+		this._pixelOrigin = this._map.getPixelOrigin();
+  	this._wgsOrigin = L.latLng([0, 0]);
+    this._wgsInitialShift = this._map.latLngToLayerPoint(this._wgsOrigin);
+    this._zoom = this._map.getZoom();
+		this._zoom2 = this._map.getZoom();
+    this._shift = L.point(0, 0);
+    this._scale = 1;
+
 		this._reset();
 	},
 
@@ -84,7 +92,13 @@ export default L.Class.extend({
   applyTransform: function(tx) {
     if(tx) {
       if(this._lastTx) {
-        tx = this._lastTx.clone(tx).applyTransform(tx);
+				//	tx.translate(this._shift.x, this._shift.y);
+				if(this.hasZoomed) {
+					console.log('has zoomed!!');
+        	tx = this._lastTx.clone().translate(this._shift.x, this._shift.y).applyTransform(tx);
+				} else {
+					tx = this._lastTx.clone().applyTransform(tx);
+				}
       }
 
       var transform =
@@ -94,6 +108,11 @@ export default L.Class.extend({
 
         this._el._leaflet_pos = tx._applyPts(this._origLeft);
     } else {
+			if(this.hasZoomed) {
+				console.log('translating back...');
+				//this._lastTx.translate(-this._shift.x, -this._shift.y);
+			}
+			this.hasZoomed = false;
       this._lastTx = this._tx;
     }
   },
@@ -114,23 +133,57 @@ export default L.Class.extend({
 
 	},
 
-	 _undef: function(a){ return typeof a == "undefined" },
+	  _undef: function(a){ return typeof a == "undefined" },
 
-	_zoomEnd: function(e) {
-		/*var newZoom = this._undef(ev.zoom) ? this._map._zoom : ev.zoom;
-		this._zoomDiff = newZoom - this._zoom;
-  	this._scale = Math.pow(2, this._zoomDiff);
+	_zoomEnd: function(evt) {
+		var newZoom = this._undef(evt.zoom) ? this._map._zoom : evt.zoom; // "viewreset" event in Leaflet has not zoom/center parameters like zoomanim
+    this._zoomDiff = newZoom - this._zoom;
+    this._scale = Math.pow(2, this._zoomDiff);
 
-		var shift = this._map.latLngToLayerPoint(this._origLeft)
-			._subtract(this._origLeftPx.multiplyBy(this._scale));
+		this._zoom = newZoom;
 
-		console.log('zoom end!', newZoom, this._zoomDiff, this._scale, shift);*/
+		//
+		var newZoom2 = this._undef(evt.zoom) ? this._map._zoom : evt.zoom; // "viewreset" event in Leaflet has not zoom/center parameters like zoomanim
+		this._zoomDiff2 = newZoom2 - this._zoom2;
+		this._scale2 = Math.pow(2, this._zoomDiff2);
 
-		//console.log('last zoom', this._lastZoom, 'current zoom', this._map.getZoom());
-		//var scale = this._map.getZoomScale(this._lastZoom);
-		//console.log('called zoom end!', scale);
 
-		//this._lastZoom = this._map.getZoom();
+
+
+
+		//
+
+		console.log(this._scale);
+		console.log('origin!!!!', this._wgsOrigin);
+		this._shift = this._map.latLngToLayerPoint(this._wgsOrigin)
+				 ._subtract(this._wgsInitialShift.multiplyBy(this._scale2));
+
+				 console.log('shift!!', this._shift);
+
+
+		var topLeft = this._map.latLngToLayerPoint(this._polygon.getBounds().getNorthWest());
+
+		console.log('orig', this._origLeft, 'new', topLeft);
+		this.hasZoomed = true;
+		if(this._lastTx) {
+			this._lastTx.scale(this._scale, this._scale);
+			//this._lastTx.translate(this._origLeft.x - topLeft.x, this._origLeft.y - topLeft.y);
+			var tx = this._lastTx.clone();
+			//tx.translate(100, 100);
+			var currentOrigin = this._map.latLngToLayerPoint(this._map.getBounds().getNorthWest());
+			console.log('orig', this._origOrigin);
+			console.log('current', currentOrigin);
+			tx.translate(this._shift.x, this._shift.y);
+			//this._el.style.transformOrigin = this.
+
+			var transform =
+				[tx.getCSSTranslateString(this._origLeft), tx.getCSSTransformString(true)].join(" ");
+					this._el.style[L.DomUtil.TRANSFORM] = transform;
+				//this._tx = tx;
+
+				this._el._leaflet_pos = tx._applyPts(topLeft);
+				//this._origLeft = topLeft;
+			}
 	},
 
 	_reset: function () {
@@ -138,27 +191,26 @@ export default L.Class.extend({
 		    topLeft = this._map.latLngToLayerPoint(this._polygon.getBounds().getNorthWest()),
 		    size = this._map.latLngToLayerPoint(this._polygon.getBounds().getSouthEast())._subtract(topLeft);
 
-    el.style.width  = size.x + 'px';
-    el.style.height = size.y + 'px';
+		console.log('reset called!', topLeft);
 
-    this._origLeft = topLeft;
-		//this._origLeftPx =  this._map.latLngToLayerPoint(this._wgsOrigin);
-    el.style.transformOrigin = '0 0 0';
 
-    var tx = this._lastTx;
 
-    if(tx) {
-      var transform =
-        [tx.getCSSTranslateString(this._origLeft), tx.getCSSTransformString(false)].join(" ");
-          this._el.style[L.DomUtil.TRANSFORM] = transform;
-        this._el._leaflet_pos = tx._applyPts(this._origLeft);
-          //  delete this._lastTx;
 
-    } else {
-      L.DomUtil.setPosition(el, topLeft);
-    }
 
-		if(!this._zoom) this._zoom = this._map.getZoom();
+		if(this._lastTx) {
+
+		} else {
+				this._origOrigin = this._map.latLngToLayerPoint(this._map.getBounds().getNorthWest());
+				this._origLeft = topLeft;
+				el.style.transformOrigin = '0 0 0';
+			L.DomUtil.setPosition(el, topLeft);
+			el.style.width  = size.x + 'px';
+			el.style.height = size.y + 'px';
+		}
+
+
+
+
 		this._renderer.render(this._pageNumber, size);
 	},
 
