@@ -7,6 +7,7 @@ import HiddenPathPolygon from './draw/handler/HiddenPath';
 import CanvasPDF from './layer/render/CanvasPDF';
 import SVGPDF from './layer/render/SVGPDF';
 import TransformOverlay from './feature/TransformOverlay';
+import NudgeOverlay from './feature/NudgeOverlay';
 
 export {
   DoubleBorderPolygon,
@@ -17,5 +18,6 @@ export {
   HiddenPathPolygon,
   CanvasPDF,
   TransformOverlay,
-  SVGPDF
+  SVGPDF,
+  NudgeOverlay
 };
