@@ -154,8 +154,8 @@ export default L.FeatureGroup.extend({
   },
 
   updateTransformEstimate: function() {
-    domainPoints = this.projectControlPoints(this.controlPoints.domain);
-    rangePoints = this.projectControlPoints(this.controlPoints.range);
+    var domainPoints = this.projectControlPoints(this.controlPoints.domain);
+    var rangePoints = this.projectControlPoints(this.controlPoints.range);
     console.log('domain:', domainPoints);
     console.debug('range:', rangePoints);
     var transform = nudged.estimate('TSR', domainPoints, rangePoints);
