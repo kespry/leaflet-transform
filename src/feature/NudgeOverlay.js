@@ -82,7 +82,6 @@ export default L.FeatureGroup.extend({
 
 
         if(self.transform) {
-          //debugger;
           estimatedPoint = self.transform.transform([pt.x, pt.y]);
         }
 
@@ -147,20 +146,23 @@ export default L.FeatureGroup.extend({
   projectControlPoints: function(points) {
     var self = this;
 
+    var origin = this._overlays.range.getOrigin();
     return points.map(function(pointMarker) {
       var pt = self._map.latLngToLayerPoint(pointMarker.getLatLng());
-      return [pt.x, pt.y];
+      return [pt.x - origin.x, pt.y - origin.y];
     });
   },
 
   updateTransformEstimate: function() {
-    console.log('domain', this.projectControlPoints(this.controlPoints.domain), 'range', this.projectControlPoints(this.controlPoints.range));
-    var transform = nudged.estimate('TSR', this.projectControlPoints(this.controlPoints.domain), this.projectControlPoints(this.controlPoints.range));
+    domainPoints = this.projectControlPoints(this.controlPoints.domain);
+    rangePoints = this.projectControlPoints(this.controlPoints.range);
+    console.log('domain:', domainPoints);
+    console.debug('range:', rangePoints);
+    var transform = nudged.estimate('TSR', domainPoints, rangePoints);
     var matrix = transform.getMatrix();
-    //var cssMatrix = [matrix.a, matrix.b, matrix.c, matrix.d, matrix.e, matrix.f];
     var cssMatrix = [transform.s, transform.r, -transform.r, transform.s, transform.tx, transform.ty];
-    var cssTransformStr = 'matrix(' + cssMatrix.join(', ') + ')';
-    console.log(matrix, cssMatrix, cssTransformStr);
+    var cssTransformStr = L.DomUtil.getTranslateString(this._overlays.range.getOrigin()) + ' matrix(' + cssMatrix.join(', ') + ')';
+
     this._overlays.range._image.style.transform = cssTransformStr;
     this._overlays.range._image.style.transformOrigin = '0 0 0';
     this.transform = transform;
