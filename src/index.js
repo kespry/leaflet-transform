@@ -8,6 +8,7 @@ import CanvasPDF from './layer/render/CanvasPDF';
 import SVGPDF from './layer/render/SVGPDF';
 import TransformOverlay from './feature/TransformOverlay';
 import NudgeOverlay from './feature/NudgeOverlay';
+import SVGOverlay from './layer/SVGOverlay';
 
 export {
   DoubleBorderPolygon,
@@ -19,5 +20,6 @@ export {
   CanvasPDF,
   TransformOverlay,
   SVGPDF,
-  NudgeOverlay
+  NudgeOverlay,
+  SVGOverlay,
 };
