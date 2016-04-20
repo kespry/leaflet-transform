@@ -17,11 +17,11 @@ export default L.Class.extend({
 	onAdd: function (map) {
 		this._map = map;
 
-		if (!this._image) {
+		if (!this._el) {
 			this._initImage();
 		}
 
-		map._panes.overlayPane.appendChild(this._image);
+		map._panes.overlayPane.appendChild(this._el);
 
 		map.on('viewreset', this._reset, this);
 
@@ -33,7 +33,7 @@ export default L.Class.extend({
 	},
 
 	onRemove: function (map) {
-		map.getPanes().overlayPane.removeChild(this._image);
+		map.getPanes().overlayPane.removeChild(this._el);
 
 		map.off('viewreset', this._reset, this);
 
@@ -55,23 +55,23 @@ export default L.Class.extend({
 
 	// TODO remove bringToFront/bringToBack duplication from TileLayer/Path
 	bringToFront: function () {
-		if (this._image) {
-			this._map._panes.overlayPane.appendChild(this._image);
+		if (this._el) {
+			this._map._panes.overlayPane.appendChild(this._el);
 		}
 		return this;
 	},
 
 	bringToBack: function () {
 		var pane = this._map._panes.overlayPane;
-		if (this._image) {
-			pane.insertBefore(this._image, pane.firstChild);
+		if (this._el) {
+			pane.insertBefore(this._el, pane.firstChild);
 		}
 		return this;
 	},
 
 	setUrl: function (url) {
 		this._url = url;
-		this._image.src = this._url;
+		this._el.src = this._url;
 	},
 
 	getAttribution: function () {
@@ -79,18 +79,18 @@ export default L.Class.extend({
 	},
 
 	_initImage: function () {
-		this._image = L.DomUtil.create('img', 'leaflet-image-layer');
+		this._el = L.DomUtil.create('iframe', 'leaflet-image-layer');
 
 		if (this._map.options.zoomAnimation && L.Browser.any3d) {
-			L.DomUtil.addClass(this._image, 'leaflet-zoom-animated');
+			L.DomUtil.addClass(this._el, 'leaflet-zoom-animated');
 		} else {
-			L.DomUtil.addClass(this._image, 'leaflet-zoom-hide');
+			L.DomUtil.addClass(this._el, 'leaflet-zoom-hide');
 		}
 
 		this._updateOpacity();
 
 		//TODO createImage util method to remove duplication
-		L.extend(this._image, {
+		L.extend(this._el, {
 			galleryimg: 'no',
 			onselectstart: L.Util.falseFn,
 			onmousemove: L.Util.falseFn,
@@ -101,7 +101,7 @@ export default L.Class.extend({
 
 	_animateZoom: function (e) {
 		var map = this._map,
-		    image = this._image,
+		    image = this._el,
 		    scale = map.getZoomScale(e.zoom),
 		    nw = this._bounds.getNorthWest(),
 		    se = this._bounds.getSouthEast(),
@@ -119,7 +119,7 @@ export default L.Class.extend({
   },
 
 	_reset: function () {
-		var image   = this._image,
+		var image   = this._el,
 		    topLeft = this._map.latLngToLayerPoint(this._bounds.getNorthWest()),
 		    size = this._map.latLngToLayerPoint(this._bounds.getSouthEast())._subtract(topLeft);
 
@@ -130,10 +130,28 @@ export default L.Class.extend({
 	},
 
 	_onImageLoad: function () {
+		this._el.contentWindow.document.children[0].style.width = '100%';
+		this._el.contentWindow.document.children[0].style.height = '100%';
 		this.fire('load');
 	},
 
+	addStyle: function(rule) {
+		if(!this._style) {
+			this._style = document.createElement('style');
+			this._el.contentWindow.document.children[0].appendChild(this._style);
+		} else {
+			this._el.contentWindow.document.children[0].removeChild(this._style);
+			delete this._style;
+			this._style = document.createElement('style');
+			this._el.contentWindow.document.children[0].appendChild(this._style);
+		}
+
+		this._styleIndex = this._styleIndex = 0;
+		this._style.sheet.insertRule(rule, this._styleIndex);
+		this._styleIndex++;
+	},
+
 	_updateOpacity: function () {
-		L.DomUtil.setOpacity(this._image, this.options.opacity);
+		L.DomUtil.setOpacity(this._el, this.options.opacity);
 	}
 });
