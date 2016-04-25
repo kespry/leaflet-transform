@@ -157,8 +157,8 @@ export default L.Class.extend({
     var self = this;
 
     var origin = this.getOrigin(projection);
-    return points.map(function(pointMarker) {
-      var pt = projection(pointMarker.getLatLng());
+    return points.map(function(point) {
+      var pt = projection(point);
       return [pt.x - origin.x, pt.y - origin.y];
     });
   },
