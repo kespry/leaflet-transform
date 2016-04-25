@@ -9,6 +9,7 @@ import SVGPDF from './layer/render/SVGPDF';
 import TransformOverlay from './feature/TransformOverlay';
 import NudgeOverlay from './feature/NudgeOverlay';
 import SVGOverlay from './layer/SVGOverlay';
+import PointAlignmentOverlay from './layer/PointAlignmentOverlay';
 
 export {
   DoubleBorderPolygon,
@@ -22,4 +23,5 @@ export {
   SVGPDF,
   NudgeOverlay,
   SVGOverlay,
+  PointAlignmentOverlay
 };
