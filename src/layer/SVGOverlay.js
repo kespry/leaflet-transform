@@ -80,6 +80,8 @@ export default L.Class.extend({
 
 	_initImage: function () {
 		this._el = L.DomUtil.create('iframe', 'leaflet-image-layer');
+    this._el.frameBorder = "0";
+    this._el.style.pointerEvents = "none";
 
 		if (this._map.options.zoomAnimation && L.Browser.any3d) {
 			L.DomUtil.addClass(this._el, 'leaflet-zoom-animated');
