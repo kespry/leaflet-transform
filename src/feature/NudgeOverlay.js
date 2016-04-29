@@ -279,15 +279,6 @@ export default L.FeatureGroup.extend({
   },
 
   getMercatorTransform: function() {
-    /*var earthsRadius = 6378137;
-    var mercatorCoords = function(latLng) {
-      var pt = L.Projection.SphericalMercator.project(latLng);
-      pt.x *= earthsRadius;
-      pt.y *= earthsRadius;
-
-      return pt;
-    }*/
-
     var TILE_SIZE = 256;
     var mercatorCoords = function project(latLng) {
       var siny = Math.sin(latLng.lat * Math.PI / 180);
@@ -298,17 +289,11 @@ export default L.FeatureGroup.extend({
         TILE_SIZE * (0.5 - Math.log((1 + siny) / (1 - siny)) / (4 * Math.PI)));
     }
 
-    //var mercatorCoords = function(latLng) {
-    //  return L.Projection.Mercator.project(latLng);
-    //}
-
-
     var sourcePoints = this.projectControlPoints(this.controlPoints.domain, mercatorCoords, this._overlays.range._bounds.getNorthWest());
     var destinationPoints = this.projectControlPoints(this.controlPoints.range, mercatorCoords, this._overlays.range._bounds.getNorthWest());
 
     if(sourcePoints.length >= 3 && destinationPoints.length >= 3) {
       var transform = affineFit(sourcePoints, destinationPoints);
-      console.log('points!!!', sourcePoints, destinationPoints);
       return {
         bounds: [
           this.ptToArray(mercatorCoords(this._overlays.range._bounds.getNorthWest())),
