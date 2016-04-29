@@ -210,13 +210,21 @@ export default L.FeatureGroup.extend({
     e.stopPropagation();
   },
 
-  projectControlPoints: function(points) {
+  projectControlPoints: function(points, projection, origin) {
     var self = this;
 
-    var origin = this._overlays.range.getOrigin();
+    var pOrigin;
+    if(origin) {
+      pOrigin = projection(origin);
+    }
+
     return points.map(function(pointMarker) {
-      var pt = self._map.latLngToLayerPoint(pointMarker.getLatLng());
-      return [pt.x - origin.x, pt.y - origin.y];
+      var pt = projection(pointMarker.getLatLng());
+      if(origin) {
+        return [pt.x - pOrigin.x, pt.y - pOrigin.y];
+      } else {
+        return [pt.x, pt.y];
+      }
     });
   },
 
@@ -227,14 +235,15 @@ export default L.FeatureGroup.extend({
   },
 
   updateTransformEstimate: function() {
-    var domainPoints = this.projectControlPoints(this.controlPoints.domain);
-    var rangePoints = this.projectControlPoints(this.controlPoints.range);
+    var domainPoints = this.projectControlPoints(this.controlPoints.domain, this._map.latLngToLayerPoint.bind(this._map), this._overlays.range._bounds.getNorthWest());
+    var rangePoints = this.projectControlPoints(this.controlPoints.range, this._map.latLngToLayerPoint.bind(this._map), this._overlays.range._bounds.getNorthWest());
 
     if(domainPoints.length >= 3 && rangePoints.length >= 3) {
       this._overlays.range._el.style.display = 'block';
     console.log(domainPoints, rangePoints);
     //var transform2;
     var transform = affineFit(domainPoints, rangePoints);
+    this.transform = transform;
     //if(domainPoints.length >= 3 && rangePoints.length >= 3) {
     //  transform2 = m.fromTriangles(this.toObj(domainPoints), this.toObj(rangePoints));
     //  console.log(transform2);
@@ -253,7 +262,62 @@ export default L.FeatureGroup.extend({
         this._overlays.range._el.style.transform = cssTransformStr;
         this._overlays.range._el.style.transformOrigin = '0 0 0';
         //this.transform = transform;
+
+        console.log('mercator transform', this.getMercatorTransform());
+        window.mtransform = this.getMercatorTransform();
+        console.log('mercator transform', JSON.stringify(this.getMercatorTransform()));
       }
+    }
+  },
+
+  _getCSSTransform: function(transform) {
+    return [transform.M[0][3], transform.M[0][4], transform.M[1][3], transform.M[1][4], transform.M[2][3], transform.M[2][4]];
+  },
+
+  ptToArray: function(pt) {
+    return [pt.x, pt.y];
+  },
+
+  getMercatorTransform: function() {
+    /*var earthsRadius = 6378137;
+    var mercatorCoords = function(latLng) {
+      var pt = L.Projection.SphericalMercator.project(latLng);
+      pt.x *= earthsRadius;
+      pt.y *= earthsRadius;
+
+      return pt;
+    }*/
+
+    var TILE_SIZE = 256;
+    var mercatorCoords = function project(latLng) {
+      var siny = Math.sin(latLng.lat * Math.PI / 180);
+      siny = Math.min(Math.max(siny, -0.9999), 0.9999);
+
+      return L.point(
+        TILE_SIZE * (0.5 + latLng.lng / 360),
+        TILE_SIZE * (0.5 - Math.log((1 + siny) / (1 - siny)) / (4 * Math.PI)));
+    }
+
+    //var mercatorCoords = function(latLng) {
+    //  return L.Projection.Mercator.project(latLng);
+    //}
+
+
+    var sourcePoints = this.projectControlPoints(this.controlPoints.domain, mercatorCoords, this._overlays.range._bounds.getNorthWest());
+    var destinationPoints = this.projectControlPoints(this.controlPoints.range, mercatorCoords, this._overlays.range._bounds.getNorthWest());
+
+    if(sourcePoints.length >= 3 && destinationPoints.length >= 3) {
+      var transform = affineFit(sourcePoints, destinationPoints);
+      console.log('points!!!', sourcePoints, destinationPoints);
+      return {
+        bounds: [
+          this.ptToArray(mercatorCoords(this._overlays.range._bounds.getNorthWest())),
+          this.ptToArray(mercatorCoords(this._overlays.range._bounds.getNorthEast())),
+          this.ptToArray(mercatorCoords(this._overlays.range._bounds.getSouthEast())),
+          this.ptToArray(mercatorCoords(this._overlays.range._bounds.getSouthWest()))
+        ],
+        transform: this._getCSSTransform(transform)
+      };
     }
   }
 });
