@@ -177,8 +177,10 @@ export default L.Class.extend({
     layer.style.height = `${size.y}px`;
   },
 
+  _ptToArr: ({ x, y }) => ([x, y]),
+
   _projectControlPoints: function(points, projection, origin) {
-    var projected = points.map(projection).map(({ x, y }) => ([x, y]));
+    var projected = points.map(projection).map(this._ptToArr);
     if (origin) {
       projected = this._subtractOrigin(projected, origin);
     }
@@ -251,9 +253,30 @@ export default L.Class.extend({
   },
 
   getMercatorTransform: function() {
-    const projection = L.Projection.SphericalMercator.project.bind(L.Projection.SphericalMercator);
-    return this._getCSSTransformMatrix(
-      this._getTransformMatrix(projection, this._getOrigin(projection))
-    );
+    var TILE_SIZE = 256;
+    var projection = (latLng) => {
+      var siny = Math.sin(latLng.lat * Math.PI / 180);
+      siny = Math.min(Math.max(siny, -0.9999), 0.9999);
+
+      return L.point(
+        TILE_SIZE * (0.5 + latLng.lng / 360),
+        TILE_SIZE * (0.5 - Math.log((1 + siny) / (1 - siny)) / (4 * Math.PI))
+      );
+    };
+
+    const origin = this._getOrigin(projection);
+    const matrix = this._getTransformMatrix(projection, origin);
+    if (matrix) {
+      const corners = [
+        this._bounds.getNorthWest(),
+        this._bounds.getNorthEast(),
+        this._bounds.getSouthEast(),
+        this._bounds.getSouthWest(),
+      ];
+      return {
+        bounds: corners.map(projection).map(this._ptToArr),
+        transform: this._getCSSTransformMatrix(matrix),
+      };
+    }
   },
 });
