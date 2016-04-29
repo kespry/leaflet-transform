@@ -3,5 +3,13 @@ import TransformImageOverlay from './feature/TransformImageOverlay';
 import TransformPolygonWithMarkers from './feature/TransformPolygonWithMarkers';
 import DoubleBorderPolygon from './draw/handler/DoubleBorderPolygon';
 import ImageOverlay from './edit/layer/ImageOverlay';
+import PointAlignmentOverlay from './layer/PointAlignmentOverlay';
 
-export { DoubleBorderPolygon, TransformPolygonWithImageOverlay, TransformImageOverlay, TransformPolygonWithMarkers, ImageOverlay };
+export {
+  DoubleBorderPolygon,
+  TransformPolygonWithImageOverlay,
+  TransformImageOverlay,
+  TransformPolygonWithMarkers,
+  ImageOverlay,
+  PointAlignmentOverlay
+};
