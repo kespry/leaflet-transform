@@ -145,9 +145,6 @@ export default L.Class.extend({
 	},
 
 	_onLoad: function () {
-		this._el.contentWindow.document.children[0].style.width = '100%';
-		this._el.contentWindow.document.children[0].style.height = '100%';
-
     this._setLineScale();
     this.updateTransformEstimate();
 		this.fire('load');
