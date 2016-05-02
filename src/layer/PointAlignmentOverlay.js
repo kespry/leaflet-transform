@@ -253,15 +253,12 @@ export default L.Class.extend({
   },
 
   getMercatorTransform: function() {
-    var TILE_SIZE = 256;
     var projection = (latLng) => {
-      var siny = Math.sin(latLng.lat * Math.PI / 180);
-      siny = Math.min(Math.max(siny, -0.9999), 0.9999);
-
-      return L.point(
-        TILE_SIZE * (0.5 + latLng.lng / 360),
-        TILE_SIZE * (0.5 - Math.log((1 + siny) / (1 - siny)) / (4 * Math.PI))
-      );
+      var { x, y } = L.Projection.SphericalMercator.project(latLng);
+      return {
+        x: x * L.Projection.Mercator.R_MAJOR,
+        y: y * L.Projection.Mercator.R_MAJOR,
+      };
     };
 
     const origin = this._getOrigin(projection);
