@@ -118,7 +118,6 @@ export default L.Class.extend({
     const request = new XMLHttpRequest();
     request.onload = () => {
       this._setSVGContent(request.responseText);
-      this.fire("load");
     };
     request.onerror = () => {
       this.fire("error");
@@ -137,7 +136,11 @@ export default L.Class.extend({
       this._el.onload = () => {
         this._svg = this._el.contentDocument.getElementsByTagName("svg")[0];
         this._svg.style.width = this._svg.style.height = "100%";
+        this.fire("load");
         this._updateLayer();
+      };
+      this._el.onerror = () => {
+        this.fire("error");
       };
     }
   },
