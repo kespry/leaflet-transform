@@ -135,12 +135,14 @@ export default L.Class.extend({
       // the element is removed from the DOM (in onRemove).
       this._el.onload = () => {
         this._svg = this._el.contentDocument.getElementsByTagName("svg")[0];
-        this._svg.style.width = this._svg.style.height = "100%";
-        this.fire("load");
-        this._updateLayer();
-      };
-      this._el.onerror = () => {
-        this.fire("error");
+        if (this._svg) {
+          this._svg.style.width = this._svg.style.height = "100%";
+          this.fire("load");
+          this._updateLayer();
+        } else {
+          // No SVG element means there was a parsing error.
+          this.fire("error");
+        }
       };
     }
   },
