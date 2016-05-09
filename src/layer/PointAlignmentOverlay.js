@@ -3,11 +3,12 @@ import affineFit from "affinefit";
 import nudged from "nudged";
 import { Matrix } from "matrixmath";
 
-const parent = L.TileLayer.prototype;
+const proto = L.TileLayer.prototype;
 
 export default L.TileLayer.extend({
+
   initialize: function (url, options) {
-    parent.initialize.call(this, url, options);
+    proto.initialize.call(this, url, options);
     this.setControlPoints(options.controlPoints);
   },
 
@@ -41,19 +42,44 @@ export default L.TileLayer.extend({
     return this._map.layerPointToLatLng([transformed.x, transformed.y]);
   },
 
-  // _zoomEnd: function() {
-  //   this._updateLayerTransform();
-  // },
+  _reset: function (e) {
+    proto._reset.call(this, e);
+    if (this._map) {
+      this._resizeLayer();
+      this._updateLayerTransform();
+    }
+  },
 
   /**
-   * Update the layer and position it for the specified zoom and center. If zoom/center aren't
-   * specified, the map's current values will be used instead.
+   * Override this method and subtract origin so that tiles are positioned relative to
+   * the container.
    */
-  _updateLayerTransform: function(zoom, center) {
-    if (this._map && this._container) {
-      zoom = zoom || this._map.getZoom();
-      center = center || this._map.getCenter();
-      this._applyTransform(zoom, center);
+  _getTilePos: function(tilePoint) {
+    const origin = this._getOrigin(this._mapProjection.bind(this));
+    var pos = proto._getTilePos.call(this, tilePoint);
+    pos = pos.subtract(origin);
+    return pos;
+  },
+
+  /**
+   * Sets the correct size on the tile layer container as if it were a regular layer.
+   */
+  _resizeLayer: function() {
+    const { bounds } = this.options;
+    const nw = this._mapProjection(bounds.getNorthWest());
+    const se = this._mapProjection(bounds.getSouthEast());
+    const size = se.subtract(nw);
+
+    this._tileContainer.style.width  = `${size.x}px`;
+    this._tileContainer.style.height = `${size.y}px`;
+  },
+
+  /**
+   * Update the layer and position it based on the current control points.
+   */
+  _updateLayerTransform: function() {
+    if (this._map) {
+      this._applyTransform();
     }
   },
 
@@ -63,30 +89,6 @@ export default L.TileLayer.extend({
 
   _getOrigin: function(projection) {
     return projection(this.options.bounds.getNorthWest());
-  },
-
-  _getTilePos: function(tilePoint) {
-    const origin = this._getOrigin(this._mapProjection.bind(this));
-    var pos = parent._getTilePos.call(this, tilePoint);
-    pos = pos.subtract(origin);
-    return pos;
-  },
-
-  _reset: function (e) {
-    parent._reset.call(this, e);
-    this._positionLayer();
-  },
-
-  _positionLayer: function() {
-    const layer   = this._container;
-    const { bounds } = this.options;
-    const topLeft = this._mapProjection(bounds.getNorthWest());
-    const size = this._mapProjection(bounds.getSouthEast()).subtract(topLeft);
-
-    L.DomUtil.setPosition(layer, topLeft);
-
-    layer.style.width  = `${size.x}px`;
-    layer.style.height = `${size.y}px`;
   },
 
   _ptToArr: ({ x, y }) => ([x, y]),
@@ -107,7 +109,7 @@ export default L.TileLayer.extend({
     const pointVector = new Matrix(3, 1);
     pointVector.setData([point.x, point.y, 1]);
 
-    const [x, y, _] = matrix.clone().multiply(pointVector).toArray();
+    const [x, y] = matrix.clone().multiply(pointVector).toArray();
     return { x, y };
   },
 
@@ -122,9 +124,9 @@ export default L.TileLayer.extend({
       // When we have 3 or more control points, use the affineFit library which produces better transforms.
       transform = affineFit(sourcePoints, destinationPoints);
       matrix.setData([
-        //    a                  c                  e
+        /*      a      */  /*      c      */  /*      e      */
         transform.M[0][3], transform.M[1][3], transform.M[2][3],
-        //    b                  d                  f
+        /*      b      */  /*      d      */  /*      f      */
         transform.M[0][4], transform.M[1][4], transform.M[2][4],
         0, 0, 1,
       ]);
@@ -146,8 +148,8 @@ export default L.TileLayer.extend({
     return [matrix[0], matrix[3], matrix[1], matrix[4], matrix[2], matrix[5]];
   },
 
-  _applyTransform: function(zoom, center) {
-    const projection = (latlng) => this._map._latLngToNewLayerPoint(latlng, zoom, center);
+  _applyTransform: function() {
+    const projection = this._mapProjection.bind(this);
     const origin = this._getOrigin(projection);
     const matrix = this._getTransformMatrix(projection, projection, origin);
     if(matrix) {
@@ -155,8 +157,8 @@ export default L.TileLayer.extend({
       var translateStr = L.DomUtil.getTranslateString(origin);
       var matrixStr = `matrix(${cssMatrix.join(",")})`;
 
-      this._container.style.transform = `${translateStr} ${matrixStr}`;
-      this._container.style.transformOrigin = "0 0 0";
+      this._tileContainer.style.transform = `${translateStr} ${matrixStr}`;
+      this._tileContainer.style.transformOrigin = "0 0 0";
     }
   },
 });
