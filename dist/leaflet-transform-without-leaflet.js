@@ -3346,6 +3346,45 @@ exports.default = _leaflet2.default.TileLayer.extend({
   },
 
   /**
+   * Override this method to load tiles correctly. The issue was that leaflet only loads tiles that
+   * are visible in the map's viewport. Since our tiles are transformed, if the original
+   * bounds of the tiles aren't visible, leaflet won't load them (even though the transformed bounds
+   * are visible).
+   */
+  _addTilesFromCenterOut: function _addTilesFromCenterOut(pixelBounds) {
+    var inversed = this._inverseTransformPixelBounds(pixelBounds);
+    proto._addTilesFromCenterOut.call(this, inversed);
+  },
+
+  /**
+   * Same as above.
+   */
+  _removeOtherTiles: function _removeOtherTiles(pixelBounds) {
+    var inversed = this._inverseTransformPixelBounds(pixelBounds);
+    proto._removeOtherTiles.call(this, inversed);
+  },
+
+  _inverseTransformPixelBounds: function _inverseTransformPixelBounds(pixelBounds) {
+    var bounds = this._pixelToLatLngBounds(pixelBounds);
+    var inversedBounds = _leaflet2.default.latLngBounds([this.inverseTransformLatLng(bounds.getNorthWest()), this.inverseTransformLatLng(bounds.getSouthEast())]);
+    return this._latLngToPixelBounds(inversedBounds);
+  },
+
+  _pixelToLatLngBounds: function _pixelToLatLngBounds(pixelBounds) {
+    var tileSize = this._getTileSize();
+    var nwPoint = pixelBounds.min.multiplyBy(tileSize);
+    var sePoint = pixelBounds.max.multiplyBy(tileSize);
+    return _leaflet2.default.latLngBounds(this._map.unproject(nwPoint), this._map.unproject(sePoint));
+  },
+
+  _latLngToPixelBounds: function _latLngToPixelBounds(bounds) {
+    var tileSize = this._getTileSize();
+    var nwPoint = this._map.project(bounds.getNorthWest());
+    var sePoint = this._map.project(bounds.getSouthEast());
+    return new _leaflet2.default.Bounds(nwPoint.divideBy(tileSize).subtract([1, 1]).floor(), sePoint.divideBy(tileSize).add([1, 1]).round());
+  },
+
+  /**
    * Sets the correct size on the tile layer container as if it were a regular layer.
    */
   _resizeLayer: function _resizeLayer() {
