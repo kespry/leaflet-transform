@@ -3288,9 +3288,11 @@ var _matrixmath = require("matrixmath");
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var proto = _leaflet2.default.TileLayer.prototype;
+var TRANSLATE_REGEX = /translate(3d)?\(.+?\)/gi;
+var MATRIX_REGEX = /matrix\(.+?\)/gi;
+var SCALE_REGEX = /scale\(.+?\)/gi;
 
 exports.default = _leaflet2.default.TileLayer.extend({
-
   initialize: function initialize(url, options) {
     proto.initialize.call(this, url, options);
     this.setControlPoints(options.controlPoints);
@@ -3335,14 +3337,21 @@ exports.default = _leaflet2.default.TileLayer.extend({
   },
 
   /**
+   * Override this method to record the previous zoom.
+   */
+  _animateZoom: function _animateZoom(e) {
+    this._prevZoom = this._map.getZoom();
+    proto._animateZoom.call(this, e);
+  },
+
+  /**
    * Override this method and subtract origin so that tiles are positioned relative to
    * the container.
    */
   _getTilePos: function _getTilePos(tilePoint) {
     var origin = this._getOrigin(this._mapProjection.bind(this));
     var pos = proto._getTilePos.call(this, tilePoint);
-    pos = pos.subtract(origin);
-    return pos;
+    return pos.subtract(origin);
   },
 
   /**
@@ -3394,8 +3403,16 @@ exports.default = _leaflet2.default.TileLayer.extend({
     var se = this._mapProjection(bounds.getSouthEast());
     var size = se.subtract(nw);
 
+    var translate = _leaflet2.default.DomUtil.getTranslateString(nw);
+    this._updateElemTransform(this._tileContainer, { translate: translate });
+    this._tileContainer.style.transformOrigin = "0 0 0";
+
     this._tileContainer.style.width = size.x + "px";
     this._tileContainer.style.height = size.y + "px";
+    if (this._bgBuffer) {
+      this._bgBuffer.style.width = size.x + "px";
+      this._bgBuffer.style.height = size.y + "px";
+    }
   },
 
   /**
@@ -3403,12 +3420,25 @@ exports.default = _leaflet2.default.TileLayer.extend({
    */
   _updateLayerTransform: function _updateLayerTransform() {
     if (this._map) {
-      this._applyTransform();
+      var projection = this._mapProjection.bind(this);
+      this._applyTransform(this._tileContainer, projection);
+      if (this._shouldApplyPrevZoomTransform()) {
+        var prevZoomProjection = this._zoomProjection.bind(this, this._prevZoom);
+        this._applyTransform(this._bgBuffer, prevZoomProjection);
+      }
     }
+  },
+
+  _shouldApplyPrevZoomTransform: function _shouldApplyPrevZoomTransform() {
+    return this._prevZoom && this._bgBuffer && this._bgBuffer.children.length > 0;
   },
 
   _mapProjection: function _mapProjection(latlng) {
     return this._map.latLngToLayerPoint(latlng);
+  },
+
+  _zoomProjection: function _zoomProjection(zoom, latlng) {
+    return this._map._latLngToNewLayerPoint(latlng, zoom, this._map.getCenter());
   },
 
   _getOrigin: function _getOrigin(projection) {
@@ -3494,18 +3524,39 @@ exports.default = _leaflet2.default.TileLayer.extend({
     return [matrix[0], matrix[3], matrix[1], matrix[4], matrix[2], matrix[5]];
   },
 
-  _applyTransform: function _applyTransform() {
-    var projection = this._mapProjection.bind(this);
+  _applyTransform: function _applyTransform(elem, projection) {
     var origin = this._getOrigin(projection);
-    var matrix = this._getTransformMatrix(projection, projection, origin);
-    if (matrix) {
-      var cssMatrix = this._getCSSTransformMatrix(matrix);
-      var translateStr = _leaflet2.default.DomUtil.getTranslateString(origin);
-      var matrixStr = "matrix(" + cssMatrix.join(",") + ")";
-
-      this._tileContainer.style.transform = translateStr + " " + matrixStr;
-      this._tileContainer.style.transformOrigin = "0 0 0";
+    var transformMatrix = this._getTransformMatrix(projection, projection, origin);
+    if (transformMatrix) {
+      var cssMatrix = this._getCSSTransformMatrix(transformMatrix);
+      var matrix = "matrix(" + cssMatrix.join(",") + ")";
+      this._updateElemTransform(elem, { matrix: matrix });
     }
+  },
+
+  _updateElemTransform: function _updateElemTransform(elem, _ref4) {
+    var _this = this;
+
+    var translate = _ref4.translate;
+    var scale = _ref4.scale;
+    var matrix = _ref4.matrix;
+
+    var changes = [[TRANSLATE_REGEX, translate], [SCALE_REGEX, scale], [MATRIX_REGEX, matrix]];
+    var newTransform = changes.reduce(function (transform, _ref5) {
+      var _ref6 = _slicedToArray(_ref5, 2);
+
+      var regex = _ref6[0];
+      var newValue = _ref6[1];
+      return _this._replaceTransform(transform, regex, newValue);
+    }, elem.style.transform || "");
+    elem.style.transform = newTransform;
+  },
+
+  _replaceTransform: function _replaceTransform(transform, regex, newValue) {
+    if (newValue) {
+      return transform.replace(regex, "") + " " + newValue;
+    }
+    return transform;
   }
 });
 

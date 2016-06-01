@@ -4,9 +4,11 @@ import nudged from "nudged";
 import { Matrix } from "matrixmath";
 
 const proto = L.TileLayer.prototype;
+const TRANSLATE_REGEX = /translate(3d)?\(.+?\)/gi;
+const MATRIX_REGEX = /matrix\(.+?\)/gi;
+const SCALE_REGEX = /scale\(.+?\)/gi;
 
 export default L.TileLayer.extend({
-
   initialize: function (url, options) {
     proto.initialize.call(this, url, options);
     this.setControlPoints(options.controlPoints);
@@ -51,14 +53,21 @@ export default L.TileLayer.extend({
   },
 
   /**
+   * Override this method to record the previous zoom.
+   */
+  _animateZoom: function(e) {
+    this._prevZoom = this._map.getZoom();
+    proto._animateZoom.call(this, e);
+  },
+
+  /**
    * Override this method and subtract origin so that tiles are positioned relative to
    * the container.
    */
   _getTilePos: function(tilePoint) {
     const origin = this._getOrigin(this._mapProjection.bind(this));
     var pos = proto._getTilePos.call(this, tilePoint);
-    pos = pos.subtract(origin);
-    return pos;
+    return pos.subtract(origin);
   },
 
   /**
@@ -115,8 +124,16 @@ export default L.TileLayer.extend({
     const se = this._mapProjection(bounds.getSouthEast());
     const size = se.subtract(nw);
 
+    const translate = L.DomUtil.getTranslateString(nw);
+    this._updateElemTransform(this._tileContainer, { translate });
+    this._tileContainer.style.transformOrigin = "0 0 0";
+
     this._tileContainer.style.width  = `${size.x}px`;
     this._tileContainer.style.height = `${size.y}px`;
+    if (this._bgBuffer) {
+      this._bgBuffer.style.width  = `${size.x}px`;
+      this._bgBuffer.style.height = `${size.y}px`;
+    }
   },
 
   /**
@@ -124,12 +141,25 @@ export default L.TileLayer.extend({
    */
   _updateLayerTransform: function() {
     if (this._map) {
-      this._applyTransform();
+      const projection = this._mapProjection.bind(this);
+      this._applyTransform(this._tileContainer, projection);
+      if (this._shouldApplyPrevZoomTransform()) {
+        const prevZoomProjection = this._zoomProjection.bind(this, this._prevZoom);
+        this._applyTransform(this._bgBuffer, prevZoomProjection);
+      }
     }
+  },
+
+  _shouldApplyPrevZoomTransform: function() {
+    return this._prevZoom && this._bgBuffer && this._bgBuffer.children.length > 0;
   },
 
   _mapProjection: function(latlng) {
     return this._map.latLngToLayerPoint(latlng);
+  },
+
+  _zoomProjection: function(zoom, latlng) {
+    return this._map._latLngToNewLayerPoint(latlng, zoom, this._map.getCenter());
   },
 
   _getOrigin: function(projection) {
@@ -193,17 +223,33 @@ export default L.TileLayer.extend({
     return [matrix[0], matrix[3], matrix[1], matrix[4], matrix[2], matrix[5]];
   },
 
-  _applyTransform: function() {
-    const projection = this._mapProjection.bind(this);
+  _applyTransform: function(elem, projection) {
     const origin = this._getOrigin(projection);
-    const matrix = this._getTransformMatrix(projection, projection, origin);
-    if(matrix) {
-      const cssMatrix = this._getCSSTransformMatrix(matrix);
-      var translateStr = L.DomUtil.getTranslateString(origin);
-      var matrixStr = `matrix(${cssMatrix.join(",")})`;
-
-      this._tileContainer.style.transform = `${translateStr} ${matrixStr}`;
-      this._tileContainer.style.transformOrigin = "0 0 0";
+    const transformMatrix = this._getTransformMatrix(projection, projection, origin);
+    if(transformMatrix) {
+      const cssMatrix = this._getCSSTransformMatrix(transformMatrix);
+      const matrix = `matrix(${cssMatrix.join(",")})`;
+      this._updateElemTransform(elem, { matrix });
     }
+  },
+
+  _updateElemTransform: function(elem, { translate, scale, matrix }) {
+    const changes = [
+      [TRANSLATE_REGEX, translate],
+      [SCALE_REGEX, scale],
+      [MATRIX_REGEX, matrix],
+    ];
+    const newTransform = changes.reduce(
+      (transform, [regex, newValue]) => this._replaceTransform(transform, regex, newValue),
+      elem.style.transform || ""
+    );
+    elem.style.transform = newTransform;
+  },
+
+  _replaceTransform: function(transform, regex, newValue) {
+    if (newValue) {
+      return transform.replace(regex, "") + " " + newValue;
+    }
+    return transform;
   },
 });
