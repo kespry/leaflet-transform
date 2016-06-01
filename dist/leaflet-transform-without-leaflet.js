@@ -4687,6 +4687,10 @@ exports.default = _leaflet2.default.TileLayer.extend({
     this.controlPoints = controlPoints || { source: [], destination: [] };
     if (this._map) {
       this._updateLayerTransform();
+      // Hide old tiles when updating control points
+      if (this._bgBuffer) {
+        this._bgBuffer.style.visibility = "hidden";
+      }
     }
     return this;
   },
@@ -4807,15 +4811,7 @@ exports.default = _leaflet2.default.TileLayer.extend({
     if (this._map) {
       var projection = this._mapProjection.bind(this);
       this._applyTransform(this._tileContainer, projection);
-      if (this._shouldApplyPrevZoomTransform()) {
-        var prevZoomProjection = this._zoomProjection.bind(this, this._prevZoom);
-        this._applyTransform(this._bgBuffer, prevZoomProjection);
-      }
     }
-  },
-
-  _shouldApplyPrevZoomTransform: function _shouldApplyPrevZoomTransform() {
-    return this._prevZoom && this._bgBuffer && this._bgBuffer.children.length > 0;
   },
 
   _mapProjection: function _mapProjection(latlng) {
@@ -4927,14 +4923,18 @@ exports.default = _leaflet2.default.TileLayer.extend({
     var matrix = _ref4.matrix;
 
     var changes = [[TRANSLATE_REGEX, translate], [SCALE_REGEX, scale], [MATRIX_REGEX, matrix]];
+<<<<<<< HEAD
     var newTransform = changes.reduce(function (transform, _ref5) {
       var _ref6 = (0, _slicedToArray3.default)(_ref5, 2);
+=======
+    elem.style.transform = changes.reduce(function (transform, _ref5) {
+      var _ref6 = _slicedToArray(_ref5, 2);
+>>>>>>> 4548ef5... Hide old tiles when updating control points
 
       var regex = _ref6[0];
       var newValue = _ref6[1];
       return _this._replaceTransform(transform, regex, newValue);
     }, elem.style.transform || "");
-    elem.style.transform = newTransform;
   },
 
   _replaceTransform: function _replaceTransform(transform, regex, newValue) {

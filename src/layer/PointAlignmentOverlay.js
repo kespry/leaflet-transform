@@ -18,6 +18,10 @@ export default L.TileLayer.extend({
     this.controlPoints = controlPoints || { source: [], destination: [] };
     if (this._map) {
       this._updateLayerTransform();
+      // Hide old tiles when updating control points
+      if (this._bgBuffer) {
+        this._bgBuffer.style.visibility = "hidden";
+      }
     }
     return this;
   },
@@ -143,15 +147,7 @@ export default L.TileLayer.extend({
     if (this._map) {
       const projection = this._mapProjection.bind(this);
       this._applyTransform(this._tileContainer, projection);
-      if (this._shouldApplyPrevZoomTransform()) {
-        const prevZoomProjection = this._zoomProjection.bind(this, this._prevZoom);
-        this._applyTransform(this._bgBuffer, prevZoomProjection);
-      }
     }
-  },
-
-  _shouldApplyPrevZoomTransform: function() {
-    return this._prevZoom && this._bgBuffer && this._bgBuffer.children.length > 0;
   },
 
   _mapProjection: function(latlng) {
@@ -239,11 +235,10 @@ export default L.TileLayer.extend({
       [SCALE_REGEX, scale],
       [MATRIX_REGEX, matrix],
     ];
-    const newTransform = changes.reduce(
+    elem.style.transform = changes.reduce(
       (transform, [regex, newValue]) => this._replaceTransform(transform, regex, newValue),
       elem.style.transform || ""
     );
-    elem.style.transform = newTransform;
   },
 
   _replaceTransform: function(transform, regex, newValue) {
