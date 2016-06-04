@@ -10431,6 +10431,7 @@ var Path = _SimpleShape2.default.extend({
 	},
 
 	_onMarkerDragEnd: function _onMarkerDragEnd(e) {
+		this._origCenter = this._getCenter();
 		this._toggleCornerMarkers(1);
 		this._repositionAllMarkers();
 
@@ -10441,6 +10442,16 @@ var Path = _SimpleShape2.default.extend({
 		pre: "latLngToLayerPoint",
 		post: "layerPointToLatLng"
 	},
+
+	getMovePoint: function getMovePoint() {
+		if (!this._origCenter) {
+			this._origCenter = this._getCenter();
+		}
+
+		return this._origCenter;
+	},
+
+	_updateTransformLayers: function _updateTransformLayers() {},
 
 	transforms: {
 		ui: {
@@ -10481,21 +10492,23 @@ var Path = _SimpleShape2.default.extend({
 				this._markerGroup.addLayer(this._rotateLine);
 			}
 		},
-		getMovePoint: function getMovePoint() {
-			return this._origCenter();
-		},
 		events: {
 			move: function move(newPos) {
 				var tx = new _AffineTransform.Transform(this._map, this.projectionMethods).move(this.getMovePoint(), newPos);
 				this._shape.setLatLngs(tx.apply(this._origLatLngs));
 				this._repositionAllMarkers();
 
+				this._updateTransformLayers(tx);
+
 				return tx;
 			},
 			resize: function resize(latlng) {
 				var tx = new _AffineTransform.Transform(this._map, this.projectionMethods).resize(this._oppositeCorner, this._currentCorner, latlng);
 				this._shape.setLatLngs(tx.apply(this._origLatLngs));
+				delete this._origCenter;
 				this._repositionAllMarkers();
+
+				this._updateTransformLayers(tx);
 
 				return tx;
 			},
@@ -10504,6 +10517,8 @@ var Path = _SimpleShape2.default.extend({
 				this._angle = this._origAngle + tx.getAngle();
 				this._shape.setLatLngs(tx.apply(this._origLatLngs));
 				this._repositionAllMarkers();
+
+				this._updateTransformLayers(tx);
 
 				return tx;
 			}
@@ -10527,6 +10542,12 @@ var Path = _SimpleShape2.default.extend({
 		}
 	},
 
+	_repositionMoveMarker: function _repositionMoveMarker() {
+		if (this._moveMarker) {
+			this._moveMarker.setLatLng(this._getCenter());
+		}
+	},
+
 	_repositionAllMarkers: function _repositionAllMarkers() {
 		var corners = this._getCorners();
 
@@ -10537,7 +10558,7 @@ var Path = _SimpleShape2.default.extend({
 		}
 
 		if (this._moveMarker) {
-			this._moveMarker.setLatLng(this._getCenter());
+			this._moveMarker.setLatLng(this.getMovePoint());
 		}
 
 		if (this._rotateMarker) {
@@ -10663,6 +10684,7 @@ var Poly = _Path2.default.extend({
 		this._shape.getLatLngs()[marker._index] = marker._latlng;
 		this._shape.redraw();
 		this._repositionAllMarkers();
+		this._repositionMoveMarker();
 	},
 
 	_onMarkerClick: function _onMarkerClick(e) {
@@ -10839,15 +10861,6 @@ var PolyGroup = _Poly2.default.extend({
   }
 });
 
-var transforms = PolyGroup.prototype.transforms;
-["move", "resize", "rotate"].forEach(function (mouseEvent) {
-  var ev = transforms.events[mouseEvent];
-  transforms.events[mouseEvent] = function (pt) {
-    this._tx = ev.apply(this, arguments);
-    this._updateTransformLayers(this._tx);
-  };
-});
-
 _leaflet2.default.Polygon.include({
   addTransformLayer: function addTransformLayer(layer) {
     this._transformLayers.push(layer);
@@ -10903,15 +10916,6 @@ var SimplePolyGroup = _Path2.default.extend({
       layer.applyTransform(tx);
     }
   }
-});
-
-var transforms = SimplePolyGroup.prototype.transforms;
-["move", "resize", "rotate"].forEach(function (mouseEvent) {
-  var ev = transforms.events[mouseEvent];
-  transforms.events[mouseEvent] = function (pt) {
-    this._tx = ev.apply(this, arguments);
-    this._updateTransformLayers(this._tx);
-  };
 });
 
 _leaflet2.default.Polygon.include({
@@ -11175,6 +11179,7 @@ exports.default = _leaflet2.default.ImageOverlay.extend({
     image.style.transformOrigin = '0 0 0';
 
     _leaflet2.default.DomUtil.setPosition(image, topLeft);
+    delete this._lastTx;
   }
 });
 
@@ -11528,14 +11533,18 @@ exports.default = _leaflet2.default.Marker.extend({
       }
     });
 
+    this.on("remove", function () {
+      group.off("edit", this._toggleEditState, this);
+    });
+
     this.on("dragend", function () {
       this._origLatLng = this.getLatLng();
     });
 
-    var marker = this;
-    group.on("edit", function (event) {
-      event.state ? marker.dragging.enable() : marker.dragging.disable();
-    });
+    group.on("edit", this._toggleEditState, this);
+  },
+  _toggleEditState: function _toggleEditState(event) {
+    event.state ? this.dragging.enable() : this.dragging.disable();
   },
   applyTransform: function applyTransform(tx) {
     if (tx) {
@@ -11665,32 +11674,9 @@ exports.default = _leaflet2.default.FeatureGroup.extend({
     this.options = options;
     this._layers = {};
 
-    if (polygon) {
-      this._polygon = new _DoubleBorderPolygon2.default(polygon.coordinates[0].map(function (coord) {
-        return _leaflet2.default.latLng(coord[1], coord[0]);
-      }), this.options.polygon);
-
-      this.addLayer(this._polygon);
-    }
+    this.update(polygon, markers);
 
     var group = this;
-    if (markers) {
-      this._markers = _leaflet2.default.geoJson(markers, {
-        pointToLayer: function pointToLayer(geojson, latlng) {
-          var marker = new _TransformMarker2.default(latlng, group.options.markers, group);
-          group._polygon.addTransformLayer(marker);
-
-          marker.on('dragend', group.onDoneEditing.bind(group));
-
-          return marker;
-        }
-      });
-
-      this.addLayer(this._markers);
-    }
-
-    this._polygon.on('edit', group.onDoneEditing.bind(group));
-
     this.editing = {
       state: false,
       enable: function enable() {
@@ -11707,6 +11693,48 @@ exports.default = _leaflet2.default.FeatureGroup.extend({
       off: group.off.bind(group)
     };
   },
+
+  update: function update(polygon, markers) {
+    if (polygon) this._createPolygon(polygon);
+    if (markers) this._createMarkers(markers);
+  },
+
+  _createPolygon: function _createPolygon(polygon) {
+    if (this._polygon) {
+      this.removeLayer(this._polygon);
+      this._polygon.off('edit', this.onDoneEditing, this);
+      delete this._polygon;
+    }
+    this._polygon = new _DoubleBorderPolygon2.default(polygon.coordinates[0].map(function (coord) {
+      return _leaflet2.default.latLng(coord[1], coord[0]);
+    }), this.options.polygon);
+
+    this.addLayer(this._polygon);
+    this._polygon.on('edit', this.onDoneEditing, this);
+  },
+
+  _createMarkers: function _createMarkers(markers) {
+    if (this._markers) {
+      this.removeLayer(this._markers);
+      // TODO: check for memory leak in dragend listener
+      delete this._markers;
+    }
+
+    var group = this;
+    this._markers = _leaflet2.default.geoJson(markers, {
+      pointToLayer: function pointToLayer(geojson, latlng) {
+        var marker = new _TransformMarker2.default(latlng, group.options.markers, group);
+        group._polygon.addTransformLayer(marker);
+
+        marker.on('dragend', group.onDoneEditing.bind(group));
+
+        return marker;
+      }
+    });
+
+    if (!this.options.markers.hidden) this.addLayer(this._markers);
+  },
+
   onDoneEditing: function onDoneEditing() {
     var changes = {};
     if (this._polygon) changes.polygon = this._polygon.toGeoJSON().geometry;
@@ -11714,10 +11742,17 @@ exports.default = _leaflet2.default.FeatureGroup.extend({
 
     this.fire('done', changes);
   },
-
   onAdd: function onAdd() {
     _leaflet2.default.FeatureGroup.prototype.onAdd.apply(this, arguments);
     this.fire("add");
+  },
+  toggleMarkers: function toggleMarkers(visibility) {
+    if (!this._markers) return;
+    if (visibility && !this.hasLayer(this._markers)) {
+      this.addLayer(this._markers);
+    } else if (!visibility) {
+      this.removeLayer(this._markers);
+    }
   }
 });
 

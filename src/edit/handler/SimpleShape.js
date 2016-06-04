@@ -4,7 +4,7 @@ import MarkerExt from '../../ext/MarkerExt';
 const SimpleShape = L.Handler.extend({
 	options: {
 		moveIcon: new L.DivIcon({
-			iconSize: new L.Point(8, 8),
+			iconSize: new L.Point(12, 12),
 			className: 'leaflet-div-icon leaflet-editing-icon leaflet-edit-move'
 		}),
 		resizeIcon: new L.DivIcon({
