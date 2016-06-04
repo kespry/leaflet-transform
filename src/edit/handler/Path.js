@@ -108,6 +108,7 @@ const Path = SimpleShape.extend({
 			resize: function(latlng) {
 				var tx = new Transform(this._map, this.projectionMethods).resize(this._oppositeCorner, this._currentCorner, latlng);
 				this._shape.setLatLngs(tx.apply(this._origLatLngs));
+				delete this._origCenter;
 				this._repositionAllMarkers();
 
 				this._updateTransformLayers(tx);

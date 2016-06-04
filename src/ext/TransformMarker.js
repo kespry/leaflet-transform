@@ -17,14 +17,18 @@ export default L.Marker.extend({
        }
      });
 
+     this.on("remove", function() {
+       group.off("edit", this._toggleEditState, this);
+     });
+
      this.on("dragend", function() {
        this._origLatLng = this.getLatLng();
      });
 
-     var marker = this;
-     group.on("edit", function(event) {
-       event.state ? marker.dragging.enable() : marker.dragging.disable();
-     });
+     group.on("edit", this._toggleEditState, this);
+  },
+  _toggleEditState: function(event) {
+    event.state ? this.dragging.enable() : this.dragging.disable();
   },
   applyTransform: function(tx) {
     if(tx) {
