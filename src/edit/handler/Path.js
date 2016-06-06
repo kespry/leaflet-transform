@@ -176,12 +176,22 @@ const Path = SimpleShape.extend({
 	},
 
 	_getCenter : function() {
-		var center = L.point(0,0);
 		var pts = this._pre(this._shape.getLatLngs());
-		for (var i = 0; i < pts.length; i++) {
-			center._add(pts[i]);
-		}
-		return this._post(center._divideBy(pts.length));
+
+    var extent = [pts.map(function(pt) {
+      return pt.x || pt.lng;
+    }), pts.map(function(pt) {
+      return pt.y || pt.lat;
+    })].map(function(pts) {
+      return [Math.min.apply(Math, pts), Math.max.apply(Math, pts)];
+    });
+
+    return this._post(
+      L.point(
+        extent[0][0] + (extent[0][1] - extent[0][0]) / 2,
+        extent[1][0] + (extent[1][1] - extent[1][0]) / 2
+      )
+    );
 	}
 });
 
