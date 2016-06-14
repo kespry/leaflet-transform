@@ -11747,6 +11747,7 @@ exports.default = _leaflet2.default.FeatureGroup.extend({
     this.fire("add");
   },
   toggleMarkers: function toggleMarkers(visibility) {
+    if (!this._markers) return;
     if (visibility && !this.hasLayer(this._markers)) {
       this.addLayer(this._markers);
     } else if (!visibility) {

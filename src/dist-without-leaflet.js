@@ -4,9 +4,11 @@ import TransformImageOverlay from './feature/TransformImageOverlay';
 import TransformPolygonWithMarkers from './feature/TransformPolygonWithMarkers';
 import DoubleBorderPolygon from './draw/handler/DoubleBorderPolygon';
 import PointAlignmentOverlay from './layer/PointAlignmentOverlay';
+import HeightMapLayer from './layer/HeightMapLayer';
 
 L.TransformPolygonWithImageOverlay = TransformPolygonWithImageOverlay;
 L.TransformImageOverlay = TransformImageOverlay;
 L.TransformPolygonWithMarkers = TransformPolygonWithMarkers;
 L.DoubleBorderPolygon = DoubleBorderPolygon;
 L.PointAlignmentOverlay = PointAlignmentOverlay;
+L.HeightMapLayer = HeightMapLayer;

@@ -4,6 +4,7 @@ import TransformPolygonWithMarkers from './feature/TransformPolygonWithMarkers';
 import DoubleBorderPolygon from './draw/handler/DoubleBorderPolygon';
 import ImageOverlay from './edit/layer/ImageOverlay';
 import PointAlignmentOverlay from './layer/PointAlignmentOverlay';
+import HeightMapLayer from './layer/HeightMapLayer';
 
 export {
   DoubleBorderPolygon,
@@ -11,5 +12,6 @@ export {
   TransformImageOverlay,
   TransformPolygonWithMarkers,
   ImageOverlay,
-  PointAlignmentOverlay
+  PointAlignmentOverlay,
+  HeightMapLayer
 };

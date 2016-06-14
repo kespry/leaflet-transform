@@ -42,7 +42,7 @@ export default L.FeatureGroup.extend({
     this._polygon = new DoubleBorderPolygon(polygon.coordinates[0].map(function(coord) {
       return L.latLng(coord[1], coord[0]);
     }), this.options.polygon);
-    
+
     this.addLayer(this._polygon);
     this._polygon.on('edit', this.onDoneEditing, this);
   },
@@ -53,7 +53,7 @@ export default L.FeatureGroup.extend({
       // TODO: check for memory leak in dragend listener
       delete this._markers;
     }
-    
+
     var group = this;
     this._markers = L.geoJson(markers, {
       pointToLayer: function(geojson, latlng) {
@@ -68,7 +68,7 @@ export default L.FeatureGroup.extend({
 
     if(!this.options.markers.hidden) this.addLayer(this._markers);
   },
-  
+
   onDoneEditing: function() {
     var changes = {};
     if(this._polygon) changes.polygon = this._polygon.toGeoJSON().geometry;
@@ -81,6 +81,7 @@ export default L.FeatureGroup.extend({
     this.fire("add");
   },
   toggleMarkers: function(visibility) {
+    if(!this._markers) return;
     if(visibility && !this.hasLayer(this._markers)) {
       this.addLayer(this._markers);
     } else if(!visibility) {
