@@ -17,15 +17,37 @@ export default L.FeatureGroup.extend({
         group.editing.state = true;
         group._polygon.editing.enable();
         group.fire("edit", { state: true });
+        group._polygon._map.on('contextmenu', group._addMarker, group);
       },
       disable: function() {
         group.editing.state = false;
         group._polygon.editing.disable();
         group.fire("edit", { state: false });
+        group._polygon._map.off('contextmenu', group._addMarker, group);
       },
       on: group.on.bind(group),
       off: group.off.bind(group)
     };
+  },
+
+  _addMarker: function(e) {
+    if(this._markers) {
+      var marker = new TransformMarker(e.latlng, this.options.markers, this);
+      this._polygon.addTransformLayer(marker);
+      marker.on('dragend', this.onDoneEditing.bind(this));
+      marker.on('contextmenu', this._removeMarker.bind(this));
+
+      this._markers.eachLayer(function(layer) {
+        layer.addLayer(marker);
+      });
+      this.onDoneEditing();
+    }
+  },
+
+  _removeMarker: function(e) {
+    this._markers.eachLayer(function(layer) {
+      layer.removeLayer(e.target);
+    });
   },
 
   update: function(polygon, markers) {
@@ -61,6 +83,7 @@ export default L.FeatureGroup.extend({
         group._polygon.addTransformLayer(marker);
 
         marker.on('dragend', group.onDoneEditing.bind(group));
+        marker.on('contextmenu', group._removeMarker.bind(group));
 
         return marker;
       }

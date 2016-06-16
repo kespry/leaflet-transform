@@ -28,7 +28,7 @@ export default L.Marker.extend({
      group.on("edit", this._toggleEditState, this);
   },
   _toggleEditState: function(event) {
-    event.state ? this.dragging.enable() : this.dragging.disable();
+    if(this.dragging) event.state ? this.dragging.enable() : this.dragging.disable();
   },
   applyTransform: function(tx) {
     if(tx) {
