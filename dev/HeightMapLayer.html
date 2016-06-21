@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Height Map Layer</title>
+	<link rel="stylesheet" href="/node_modules/leaflet/dist/leaflet.css" />
+	<link rel="stylesheet" href="/node_modules/leaflet-draw/dist/leaflet.draw.css" />
+	<style>
+		.polygon-marker {
+			background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAAAXNSR0IArs4c6QAAAAlwSFlzAAALEwAACxMBAJqcGAAAAVlpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IlhNUCBDb3JlIDUuNC4wIj4KICAgPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4KICAgICAgPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIKICAgICAgICAgICAgeG1sbnM6dGlmZj0iaHR0cDovL25zLmFkb2JlLmNvbS90aWZmLzEuMC8iPgogICAgICAgICA8dGlmZjpPcmllbnRhdGlvbj4xPC90aWZmOk9yaWVudGF0aW9uPgogICAgICA8L3JkZjpEZXNjcmlwdGlvbj4KICAgPC9yZGY6UkRGPgo8L3g6eG1wbWV0YT4KTMInWQAAA2VJREFUOBHVlF1oFFcUx//nzsxOErvpbjYJmsSH2GStUSN+lKZQhSV+VHwRfOuDiCBBxbRSaJ9EfRF89OtFKaWKr1JooYjBVLBVlFKwGt3EVCQf6qrZNbbJ7s7MPT13dlfWrzdfPDBz7z3n3N+ce865A7xjobfxvhnkxkCjWyskxSkGhUkwbvs+/jmxlp6+bd8bgXsGuJ8UdsqmFnmMjxJYYCBMGJP5kWO9dMqsX5WXgLsGea7FOCHKlCBiliWwag8GAl9wjKyAfn1uY+8Pa+hxNdSuXpRhm2wX7n+PMnh8+yqmJ+4i8AqwnAji7d1o6uohNxZt8AvYEvWhZf/WasaL7/cP8FcS1X6BxadG0xi/+gumhv6AN/0I8D3AshFJzEfj4tVo/WQDYu0d8PKcYaZ9x9fSyQo0BJoCeIzLAkwWpjI0OnAGD6+cY2IiVvYIiIYJ3MV+sV0Ojbbe7VjQ+yXsuigkxr9qNVKH19EzA1XmJbBlMrSYnJljTg39zkpZJOf8STx2B4Heq5l2wXbPK2Xjyd+X+Mmda7AjUjFCa97GUsMxEuaQWVrDxCpPbuwOitlJIrvmoei/v/nnpQuhJzCyZEWqnpWzPP8g3Wz82np6pT6w2EdSfC4bvzBCgcUq86BYDEspn05bFt0zTiJhauQ1ClJ3dXEGoV/JZgmlvjQtA5mDB6II+8xxa0GOC2ZerBkdZUcJRKhKJ8F6kXLnyOlryqZwX66yKLWNYw3BF5Vsiy9YiuzwNfayE41MTl/3qpSBpbXmThl3ICjE3eaPuL61M4xadFomwzKGEgJ1EaNSgnFp2kVNXZ/R9PgITfx2Wu5GsBGO+7EU+xaIF+pivhOWQtOyFCWSK003SZpxP6FwowK0zOT66YOzn2474Ivx88gHbq1T1wBVG6PizDP42cm4nskmSVHCbWrHvJ7N0odfINoyDxJIRq7oocMpul4BVsIO1/0X+azkbotTQ24+9xymNXJjaSlAIcxZfWsHEslVqGuMw5vlWcnqWbnTOyowM5ZyWNawja/JI+3lsd6pizabtjBPtZhj+rPICOxnP4Jvq21m/lKEFeOeQe4TQ58UqU10prVMakwXmALclz/O8aMp+lHWr8kbgcbruwv8obkB2jRtqc9y4jzcIAU4kKJ/XyO9N4r/AQl5QtEX/9zAAAAAAElFTkSuQmCC');
+		}
+	</style>
+</head>
+<body>
+	<div id="map" style="width: 1280px; height: 1024px; border: 1px solid #ccc"></div>
+  <script src="/src/dev/HeightMapLayer.js"></script>
+</body>
+</html>

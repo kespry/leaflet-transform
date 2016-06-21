@@ -1,6 +1,5 @@
 import L from "leaflet";
 
-
 export default L.TileLayer.extend({
   redraw: function() {
     if (this._map) {
@@ -14,7 +13,7 @@ export default L.TileLayer.extend({
     return this;
   },
   _redrawTile: function(tile) {
-    this._drawTile(tile, this._tilePoint, this._map._zoom);
+    this.drawTile(tile, this._tilePoint, this._map._zoom);
   },
   _addTile: function(tilePoint, container) {
     var tilePos = this._getTilePos(tilePoint);
@@ -44,14 +43,14 @@ export default L.TileLayer.extend({
   },
 
   _loadTile: function(tile, tilePoint) {
-    this._layer = this;
-    this._tilePoint = tilePoint;
+    tile._layer = this;
+    tile._tilePoint = tilePoint;
 
     this._adjustTilePoint(tilePoint);
 
-    this.image.src     = this.getTileUrl(tilePoint);
-    this.image.onload  = this._tileOnLoad(this, tile);
-    this.image.onerror = this._tileOnError(this, tile);
+    tile.image.src     = this.getTileUrl(tilePoint);
+    tile.image.onload  = this._tileOnLoad(this, tile);
+    tile.image.onerror = this._tileOnError(this, tile);
 
     this.fire('tileloadstart', {
       tile: tile,
