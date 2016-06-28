@@ -8,7 +8,7 @@ export default L.FeatureGroup.extend({
     this.options = options;
     this._layers = {};
 
-    this.update(polygon, markers);
+    this.update(polygon, markers, true);
 
     var group = this;
     this.editing = {
@@ -34,12 +34,11 @@ export default L.FeatureGroup.extend({
     if(this._markers) {
       var marker = new TransformMarker(e.latlng, this.options.markers, this);
       this._polygon.addTransformLayer(marker);
-      marker.on('dragend', this.onDoneEditing.bind(this));
-      marker.on('contextmenu', this._removeMarker.bind(this));
 
       this._markers.eachLayer(function(layer) {
         layer.addLayer(marker);
       });
+
       this.onDoneEditing();
     }
   },
@@ -48,11 +47,21 @@ export default L.FeatureGroup.extend({
     this._markers.eachLayer(function(layer) {
       layer.removeLayer(e.target);
     });
+
+    this.onDoneEditing();
   },
 
-  update: function(polygon, markers) {
+  update: function(polygon, markers, init) {
     if(polygon) this._createPolygon(polygon);
-    if(markers) this._createMarkers(markers);
+    if(markers) {
+      if(!this.options.markers.hidden) {
+        this._createMarkers(markers);
+        this.addLayer(this._markers);
+      } else {
+        this._uninitializedMarkers = markers;
+      }
+      if(!init) this._createMarkers(markers);
+    }
   },
 
   _createPolygon: function(polygon) {
@@ -72,7 +81,6 @@ export default L.FeatureGroup.extend({
   _createMarkers: function(markers) {
     if(this._markers) {
       this.removeLayer(this._markers);
-      // TODO: check for memory leak in dragend listener
       delete this._markers;
     }
 
@@ -82,14 +90,9 @@ export default L.FeatureGroup.extend({
         var marker = new TransformMarker(latlng, group.options.markers, group);
         group._polygon.addTransformLayer(marker);
 
-        marker.on('dragend', group.onDoneEditing.bind(group));
-        marker.on('contextmenu', group._removeMarker.bind(group));
-
         return marker;
       }
     });
-
-    if(!this.options.markers.hidden) this.addLayer(this._markers);
   },
 
   onDoneEditing: function() {
@@ -104,6 +107,9 @@ export default L.FeatureGroup.extend({
     this.fire("add");
   },
   toggleMarkers: function(visibility) {
+    if(!this._markers && this._uninitializedMarkers) {
+      this._createMarkers(this._uninitializedMarkers);
+    }
     if(!this._markers) return;
     if(visibility && !this.hasLayer(this._markers)) {
       this.addLayer(this._markers);
