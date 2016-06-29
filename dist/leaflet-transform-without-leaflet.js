@@ -4414,6 +4414,7 @@ exports.default = _leaflet2.default.FeatureGroup.extend({
       });
 
       this.onDoneEditing();
+      e.originalEvent.preventDefault();
     }
   },
 
@@ -4423,6 +4424,7 @@ exports.default = _leaflet2.default.FeatureGroup.extend({
     });
 
     this.onDoneEditing();
+    e.originalEvent.preventDefault();
   },
 
   update: function update(polygon, markers, init) {

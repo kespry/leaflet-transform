@@ -40,6 +40,7 @@ export default L.FeatureGroup.extend({
       });
 
       this.onDoneEditing();
+      e.originalEvent.preventDefault();
     }
   },
 
@@ -49,6 +50,7 @@ export default L.FeatureGroup.extend({
     });
 
     this.onDoneEditing();
+    e.originalEvent.preventDefault();
   },
 
   update: function(polygon, markers, init) {
