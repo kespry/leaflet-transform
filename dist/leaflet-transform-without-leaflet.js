@@ -3650,7 +3650,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var SimpleShape = _leaflet2.default.Handler.extend({
 	options: {
 		moveIcon: new _leaflet2.default.DivIcon({
-			iconSize: new _leaflet2.default.Point(8, 8),
+			iconSize: new _leaflet2.default.Point(12, 12),
 			className: 'leaflet-div-icon leaflet-editing-icon leaflet-edit-move'
 		}),
 		resizeIcon: new _leaflet2.default.DivIcon({
