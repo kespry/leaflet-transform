@@ -4923,13 +4923,8 @@ exports.default = _leaflet2.default.TileLayer.extend({
     var matrix = _ref4.matrix;
 
     var changes = [[TRANSLATE_REGEX, translate], [SCALE_REGEX, scale], [MATRIX_REGEX, matrix]];
-<<<<<<< HEAD
-    var newTransform = changes.reduce(function (transform, _ref5) {
-      var _ref6 = (0, _slicedToArray3.default)(_ref5, 2);
-=======
     elem.style.transform = changes.reduce(function (transform, _ref5) {
-      var _ref6 = _slicedToArray(_ref5, 2);
->>>>>>> 4548ef5... Hide old tiles when updating control points
+      var _ref6 = (0, _slicedToArray3.default)(_ref5, 2);
 
       var regex = _ref6[0];
       var newValue = _ref6[1];

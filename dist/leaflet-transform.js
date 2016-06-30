@@ -10954,7 +10954,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var SimpleShape = _leaflet2.default.Handler.extend({
 	options: {
 		moveIcon: new _leaflet2.default.DivIcon({
-			iconSize: new _leaflet2.default.Point(8, 8),
+			iconSize: new _leaflet2.default.Point(12, 12),
 			className: 'leaflet-div-icon leaflet-editing-icon leaflet-edit-move'
 		}),
 		resizeIcon: new _leaflet2.default.DivIcon({
@@ -11524,27 +11524,39 @@ exports.default = _leaflet2.default.Marker.extend({
     _leaflet2.default.Marker.prototype.initialize.apply(this, arguments);
 
     this._origLatLng = latlng;
+    this._group = group;
 
     this.on("add", function () {
-      if (group.editing.state) {
-        this.dragging.enable();
-      } else {
-        this.dragging.disable();
-      }
-    });
+      this._bindEvents();
+    }, this);
 
     this.on("remove", function () {
-      group.off("edit", this._toggleEditState, this);
-    });
+      this._unbindEvents();
+    }, this);
+  },
+  _bindEvents: function _bindEvents() {
+    this.on("remove", this._toggleEditState, this);
 
-    this.on("dragend", function () {
-      this._origLatLng = this.getLatLng();
-    });
+    if (this._group) {
+      this._group.on("edit", this._toggleEditState, this);
+      this.on("dragend", this._group.onDoneEditing, this._group);
+      this.on("contextmenu", this._group._removeMarker, this._group);
+    }
 
-    group.on("edit", this._toggleEditState, this);
+    this._toggleEditState();
+  },
+  _unbindEvents: function _unbindEvents() {
+    this.off("remove", this._toggleEditState, this);
+
+    if (this._group) {
+      this._group.off("edit", this._toggleEditState, this);
+      this.off("dragend", this._group.onDoneEditing, this._group);
+      this.off("contextmenu", this._group._removeMarker, this._group);
+    }
   },
   _toggleEditState: function _toggleEditState(event) {
-    event.state ? this.dragging.enable() : this.dragging.disable();
+    var state = event && event.state ? event.state : this._group.editing.state;
+    if (this.dragging) state ? this.dragging.enable() : this.dragging.disable();
   },
   applyTransform: function applyTransform(tx) {
     if (tx) {
@@ -11674,7 +11686,7 @@ exports.default = _leaflet2.default.FeatureGroup.extend({
     this.options = options;
     this._layers = {};
 
-    this.update(polygon, markers);
+    this.update(polygon, markers, true);
 
     var group = this;
     this.editing = {
@@ -11683,20 +11695,53 @@ exports.default = _leaflet2.default.FeatureGroup.extend({
         group.editing.state = true;
         group._polygon.editing.enable();
         group.fire("edit", { state: true });
+        group._polygon._map.on('contextmenu', group._addMarker, group);
       },
       disable: function disable() {
         group.editing.state = false;
         group._polygon.editing.disable();
         group.fire("edit", { state: false });
+        group._polygon._map.off('contextmenu', group._addMarker, group);
       },
       on: group.on.bind(group),
       off: group.off.bind(group)
     };
   },
 
-  update: function update(polygon, markers) {
+  _addMarker: function _addMarker(e) {
+    if (this._markers) {
+      var marker = new _TransformMarker2.default(e.latlng, this.options.markers, this);
+      this._polygon.addTransformLayer(marker);
+
+      this._markers.eachLayer(function (layer) {
+        layer.addLayer(marker);
+      });
+
+      this.onDoneEditing();
+      e.originalEvent.preventDefault();
+    }
+  },
+
+  _removeMarker: function _removeMarker(e) {
+    this._markers.eachLayer(function (layer) {
+      layer.removeLayer(e.target);
+    });
+
+    this.onDoneEditing();
+    e.originalEvent.preventDefault();
+  },
+
+  update: function update(polygon, markers, init) {
     if (polygon) this._createPolygon(polygon);
-    if (markers) this._createMarkers(markers);
+    if (markers) {
+      if (!this.options.markers.hidden) {
+        this._createMarkers(markers);
+        this.addLayer(this._markers);
+      } else {
+        this._uninitializedMarkers = markers;
+      }
+      if (!init) this._createMarkers(markers);
+    }
   },
 
   _createPolygon: function _createPolygon(polygon) {
@@ -11716,7 +11761,6 @@ exports.default = _leaflet2.default.FeatureGroup.extend({
   _createMarkers: function _createMarkers(markers) {
     if (this._markers) {
       this.removeLayer(this._markers);
-      // TODO: check for memory leak in dragend listener
       delete this._markers;
     }
 
@@ -11726,13 +11770,9 @@ exports.default = _leaflet2.default.FeatureGroup.extend({
         var marker = new _TransformMarker2.default(latlng, group.options.markers, group);
         group._polygon.addTransformLayer(marker);
 
-        marker.on('dragend', group.onDoneEditing.bind(group));
-
         return marker;
       }
     });
-
-    if (!this.options.markers.hidden) this.addLayer(this._markers);
   },
 
   onDoneEditing: function onDoneEditing() {
@@ -11747,6 +11787,9 @@ exports.default = _leaflet2.default.FeatureGroup.extend({
     this.fire("add");
   },
   toggleMarkers: function toggleMarkers(visibility) {
+    if (!this._markers && this._uninitializedMarkers) {
+      this._createMarkers(this._uninitializedMarkers);
+    }
     if (!this._markers) return;
     if (visibility && !this.hasLayer(this._markers)) {
       this.addLayer(this._markers);
