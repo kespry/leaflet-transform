@@ -1,4 +1,8 @@
 import L from "leaflet";
+import cover from "tile-cover";
+import rewind from "geojson-rewind";
+import * as THREE from "three";
+import * as TrackballControls from "three-trackballcontrols";
 
 export default L.TileLayer.extend({
   redraw: function() {
@@ -102,9 +106,9 @@ export default L.TileLayer.extend({
     return n * Math.PI / 180;
   },
 
-  getHeightForPoint: function(lat, lon) {
+  getTileInfoForPoint: function(lat, lon) {
     var zoom     = this._map.getZoom(),
-        tileSize = this._getTileSize();
+        tileSize = this._getTileSize(),
         x        = ((lon + 180) / 360 * (1<<zoom)),
         y        = (1 - Math.log(Math.tan(this.toRad(lat)) + 1 / Math.cos(this.toRad(lat))) / Math.PI) / 2 * (1<<zoom),
         xTile    = parseInt(Math.floor(x)),
@@ -112,8 +116,14 @@ export default L.TileLayer.extend({
         tileX    = Math.floor(((x - xTile) * tileSize) / 1.0),
         tileY    = Math.floor(((y - yTile) * tileSize) / 1.0);
 
-    var tile = this._tiles[xTile + ':' + yTile];
-    var offset = (tileY * tileSize) + tileX;
+    var el = this._tiles[xTile + ':' + yTile];
+    return { mercator: { x: x, y: y }, tile: { el: el, size: tileSize, x: xTile, y: yTile, offset: { x: tileX, y: tileY } } };
+  },
+
+  getRawHeightForPoint: function(lat, lon) {
+    var point = this.getTileInfoForPoint(lat, lon);
+    var tile = this._tiles[point.tile.x + ':' + point.tile.y];
+    var offset = (point.tile.offset.y * point.tile.size) + point.tile.offset.x;
 
     if(tile && tile.floatData) {
       if(this.options.debug) {
@@ -126,6 +136,178 @@ export default L.TileLayer.extend({
       }
 
       return tile.floatData[offset];
+    }
+  },
+
+  cropHeightMapToPoints: function(geojson) {
+    var xKeys = {},
+        yKeys = {},
+        minX  = Infinity,
+        minY  = Infinity,
+        zoom  = this._map.getZoom(),
+        tiles = cover.tiles(geojson, { min_zoom: zoom,
+                                       max_zoom: zoom });
+
+    for(var i = 0; i < tiles.length; i++) {
+      var tile = tiles[i];
+      xKeys[tile[0]] = true;
+      yKeys[tile[1]] = true;
+      minX = minX > tile[0] ? tile[0] : minX;
+      minY = minY > tile[1] ? tile[1] : minY;
+    }
+
+    if(this.canvasEl) {
+      document.body.removeChild(this.canvasEl);
+    }
+
+    var canvasEl = document.createElement('canvas'),
+        tileSize = this._getTileSize();
+    canvasEl.width = Object.keys(xKeys).length * tileSize;
+    canvasEl.height = Object.keys(yKeys).length * tileSize;
+
+    var ctx = canvasEl.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+    for(var i = 0; i < tiles.length; i++) {
+      var tile = tiles[i],
+          tileEl = this._tiles[tile[0] + ':' + tile[1]];
+      if(tileEl) {
+        ctx.drawImage(tileEl.image, (tile[0] - minX) * tileSize, (tile[1] - minY) * tileSize);
+      }
+    }
+
+    var cw = rewind(geojson, true);
+    var points = cw.coordinates[0];
+    ctx.globalCompositeOperation = 'destination-in';
+    ctx.beginPath();
+
+    var perimeterPoints = [], pointSampleSize = 5;
+    for(var i = 0; i < points.length; i++) {
+      var point = points[i],
+          info = this.getTileInfoForPoint(point[1], point[0]),
+          offsetX = ((info.tile.x - minX) * tileSize) + info.tile.offset.x,
+          offsetY = ((info.tile.y - minY) * tileSize) + info.tile.offset.y;
+
+      perimeterPoints.push([info, new Float32Array(
+        ctx.getImageData(offsetX, offsetY, pointSampleSize, pointSampleSize).data.buffer
+      )]);
+      if(i === 0) ctx.moveTo(offsetX, offsetY);
+      if(i > 0 && i < points.length) ctx.lineTo(offsetX, offsetY);
+    }
+    ctx.closePath();
+    ctx.fillStyle = "rgba(0, 0, 0, 1)";
+    ctx.fill();
+    ctx.clip();
+
+
+    var w = canvasEl.width,
+        h = canvasEl.height,
+        clippedImage = ctx.getImageData(0, 0, w, h),
+        x, y, index, p = { x: [], y: [] },
+        origValues = {};
+
+    for(y = 0; y < h; y++) {
+      for(x = 0; x < w; x++) {
+        index = (y * w + x) * 4;
+        if(clippedImage.data[index+3] > 0) {
+          p.x.push(x);
+          p.y.push(y);
+        }
+      }
+    }
+
+    p.y.sort(function(a, b) { return a-b; });
+    p.x.sort(function(a, b) { return a-b; });
+    var n = p.x.length - 1;
+
+    w = p.x[n] - p.x[0];
+    h = p.y[n] - p.y[0];
+
+    var crop = ctx.getImageData(p.x[0], p.y[0], w, h);
+    canvasEl.width = w;
+    canvasEl.height = h;
+    ctx.putImageData(crop, 0, 0);
+
+    var crop32 = new Float32Array(crop.data.buffer);
+    var geometry = new THREE.PlaneGeometry(60, 60, w - 1, h - 1);
+    geometry.computeFaceNormals();
+    geometry.computeVertexNormals();
+
+    var allPerimeterPoints = new Float32Array(pointSampleSize * pointSampleSize * perimeterPoints.length);
+    for(var i = 0, o = 0; i < perimeterPoints.length; i++) {
+      for(var n = 0; n < perimeterPoints[i][1].length; n++, o++) {
+        allPerimeterPoints[o] = perimeterPoints[i][1][n];
+      }
+    }
+    var minPerimeterPoint = Math.min.apply(null, allPerimeterPoints);
+
+    for(var i = 0, l = geometry.vertices.length; i < l; i++) {
+      var val = crop32[i] - minPerimeterPoint;
+      geometry.vertices[i].z = (val > 0 ? val : 0);
+    }
+
+    var material = new THREE.MeshPhongMaterial({
+      color: 0xdddddd,
+      wireframe: true
+    });
+    var plane = new THREE.Mesh(geometry, material);
+    plane.castShadow = true;
+    plane.receiveShadow = true;
+    plane.name = "heightmap";
+    this.createScene();
+    var oldMap = this.scene.getObjectByName(plane.name);
+    if(oldMap) this.scene.remove(oldMap);
+    this.camera.lookAt(plane);
+
+    this.scene.add(plane);
+
+    //2147483647
+    //debugger;
+
+    $(canvasEl).css({
+      position: "absolute",
+      right: "0px",
+      top: "0px",
+      border: "1px solid black"
+    });
+
+    document.body.appendChild(canvasEl);
+    this.canvasEl = canvasEl;
+  },
+
+  createScene: function() {
+    if(!this.scene) {
+      var scene = this.scene = new THREE.Scene();
+      var axes = new THREE.AxisHelper(200);
+      scene.add(axes);
+
+      scene.add(new THREE.AmbientLight(0x111111));
+      var light = new THREE.DirectionalLight(0xffffff, 1);
+      light.shadowCameraVisible = true;
+      light.position.set(0,300,100);
+      scene.add(light);
+      var camera = window.camera = this.camera = new THREE.PerspectiveCamera(45, 640 / 480, 0.1, 1000);
+      //camera.position.y = -60;
+      camera.position.z = 100;
+
+      
+      var renderer = new THREE.WebGLRenderer();
+      renderer.setSize(640, 480);
+      $(renderer.domElement).css({
+        position: "absolute",
+        right: "0px",
+        bottom: "0px"
+      });
+      document.body.appendChild(renderer.domElement);
+      
+      window.THREE = THREE;
+      var controls = new TrackballControls.default(camera, renderer.domElement);
+
+      function render() {
+        requestAnimationFrame(render);
+        controls.update();
+        renderer.render(scene, camera);
+      }
+      render();
     }
   },
 

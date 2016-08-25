@@ -5,7 +5,7 @@ import { sites, images, markers } from './hmdata';
 
 var layers = [];
 var markerObjects = [];
-
+var heightMapLayer;
 images.forEach(function(image) {
   layers.push(L.tileLayer(image.ortho_tile_options.baseUrl + "/{z}/{x}/{y}.png", {
     minZoom: image.ortho_tile_options.minZoom,
@@ -24,7 +24,7 @@ images.forEach(function(image) {
     bounds: image.ortho_tile_options.bounds
   });
 
-  var heightMapLayer = new HeightMapLayer('/tiles/png/{z}/{x}/{y}.png', {
+  heightMapLayer = new HeightMapLayer('/tiles/png/{z}/{x}/{y}.png', {
     minZoom: image.ortho_tile_options.minZoom,
     maxZoom: 25,
     tms: true,
@@ -65,6 +65,7 @@ markers.forEach(function(marker) {
 
   polyWithMarkers.on('done', function(changes) {
     console.log('done editing!', changes);
+    heightMapLayer.cropHeightMapToPoints(changes.polygon);
   });
 });
 
