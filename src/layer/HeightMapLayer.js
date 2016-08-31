@@ -330,7 +330,6 @@ export default L.TileLayer.extend({
         return a + b;
       }, 0) / point[1].length;
       basePointMesh.position.set(point[0].center.x * -1, point[0].center.y, (zValue - minPoint) * scale);
-      console.log(basePointMesh, 'zValue!!!', zValue);
       var oldPoint = this.scene.getObjectByName(basePointMesh.name);
       if(oldPoint) this.scene.remove(oldPoint);
       this.scene.add(basePointMesh);
@@ -350,45 +349,22 @@ export default L.TileLayer.extend({
         minZ = Math.min.apply(null, zPoints),
         maxZ = Math.max.apply(null, zPoints);
 
-    //debugger;
     fitPoints = fitPoints.map(function(pt) {
       return [pt[0] * -1, pt[1], pt[2]];
     });
     var plate = mvi.thinPlateSpline(fitPoints, 0);
-   //debugger;
         var planeGeometry = new THREE.PlaneGeometry(sizeX, sizeY, sizeX - 1, sizeY - 1);
         planeGeometry.computeFaceNormals();
         planeGeometry.computeVertexNormals();
-       //debugger;
-        //for(var i = 0, l = planeGeometry.vertices.length; i < l; i++) {
-         // var coords = calculateCoordinates(i, w, h);
           for(var i = 0, l = planeGeometry.vertices.length; i < l; i++) {
             var y = Math.floor(i / sizeX), x = i - (y * sizeX);
             planeGeometry.vertices[i].z = (plate(x - sizeX/2, y - sizeY/2) - minPoint) * scale;
           }
-          /*for(var y  = 0; y < sizeY; y++) {
-            for(var x = 0; x < sizeX; x++) {
-              //console.log(plate(x, y));
-              planeGeometry.vertices[y * sizeX + x].z = (plate(x, y) - minPoint) * scale;
-            }
-          }
-          //planeGeometry.vertices[i].z = (plate(coords[0], coords[1]) - minPoint) * scale;
-        //}
-
-        /*for(var x = 0; x < sizeX; x++) {
-          for(var y = 0; y < sizeY; y++) {
-            planeGeometry.vertices[x * sizeY + y].z = (plate(x, y) - minPoint) * scale;
-          }
-        }*/
-        //for(var i = 0, l = planeGeometry.vertices.length; i < l; i++) {
-        //  planeGeometry.vertices[i].z = (plate - minPoint) * scale;
-       // }
       var planeMaterial = new THREE.MeshBasicMaterial({
-        //vertexColors: THREE.VertexColors,
         wireframe: true,
-        color: 0xff0000
-        //opacity: 0.2,
-        //transparent: true
+        color: 0xff0000,
+        opacity: 0.2,
+        transparent: true
       });
 
       var basePlane = new THREE.Mesh(planeGeometry, planeMaterial);
