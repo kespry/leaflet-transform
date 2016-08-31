@@ -2,7 +2,12 @@ import L from "leaflet";
 import cover from "tile-cover";
 import rewind from "geojson-rewind";
 import * as THREE from "three";
-import * as TrackballControls from "three-trackballcontrols";
+import TrackballControls from "three-trackballcontrols";
+import * as colorbrewer from "colorbrewer";
+import interpolate from "color-interpolate";
+import * as palettes from "nice-color-palettes";
+import tps from "thinplate";
+import mvi from "./mvi";
 
 export default L.TileLayer.extend({
   redraw: function() {
@@ -139,14 +144,33 @@ export default L.TileLayer.extend({
     }
   },
 
-  cropHeightMapToPoints: function(geojson) {
+  calcCenter: function(polygon) {
+    var coords = polygon.coordinates[0],
+        lats = coords.map(function(coord) {
+          return coord[0];
+        }),
+        lngs = coords.map(function(coord) {
+          return coord[1];
+        });
+
+    var minLat = Math.min.apply(null, lats), maxLat = Math.max.apply(null, lats);
+    var minLng = Math.min.apply(null, lngs), maxLng = Math.max.apply(null, lngs);
+
+    return [
+      minLat + (maxLat - minLat) / 2,
+      minLng + (maxLng - minLng) / 2
+    ];
+  },
+
+  cropHeightMapToPoints: function(polygon, markers) {
     var xKeys = {},
         yKeys = {},
         minX  = Infinity,
         minY  = Infinity,
         zoom  = this._map.getZoom(),
-        tiles = cover.tiles(geojson, { min_zoom: zoom,
-                                       max_zoom: zoom });
+        polygonTiles = cover.tiles(polygon, { min_zoom: zoom, max_zoom: zoom }),
+        markerTiles  = cover.tiles(markers, { min_zoom: zoom, max_zoom: zoom }),
+        tiles = polygonTiles.concat(markerTiles);
 
     for(var i = 0; i < tiles.length; i++) {
       var tile = tiles[i];
@@ -167,15 +191,17 @@ export default L.TileLayer.extend({
 
     var ctx = canvasEl.getContext('2d');
     ctx.imageSmoothingEnabled = false;
+    var drawnTiles = {};
     for(var i = 0; i < tiles.length; i++) {
       var tile = tiles[i],
           tileEl = this._tiles[tile[0] + ':' + tile[1]];
-      if(tileEl) {
+      if(tileEl && !drawnTiles[tile[0] + ':' + tile[1]]) {
         ctx.drawImage(tileEl.image, (tile[0] - minX) * tileSize, (tile[1] - minY) * tileSize);
       }
+      drawnTiles[tile[0] + ':' + tile[1]] = true;
     }
 
-    var cw = rewind(geojson, true);
+    var cw = rewind(polygon, true);
     var points = cw.coordinates[0];
     ctx.globalCompositeOperation = 'destination-in';
     ctx.beginPath();
@@ -187,17 +213,41 @@ export default L.TileLayer.extend({
           offsetX = ((info.tile.x - minX) * tileSize) + info.tile.offset.x,
           offsetY = ((info.tile.y - minY) * tileSize) + info.tile.offset.y;
 
+      info.offset = { x: offsetX, y: offsetY };
       perimeterPoints.push([info, new Float32Array(
         ctx.getImageData(offsetX, offsetY, pointSampleSize, pointSampleSize).data.buffer
       )]);
       if(i === 0) ctx.moveTo(offsetX, offsetY);
       if(i > 0 && i < points.length) ctx.lineTo(offsetX, offsetY);
     }
+
+    var basePoints = [],
+        polygonCenter = this.calcCenter(polygon),
+        origin = this.getTileInfoForPoint(polygonCenter[1], polygonCenter[0]);
+        origin.offset = {
+          x: ((origin.tile.x - minX) * tileSize) + origin.tile.offset.x,
+          y: ((origin.tile.y - minY) * tileSize) + origin.tile.offset.y
+        };
+
+    for(var i = 0; i < markers.coordinates.length; i++) {
+      var point = markers.coordinates[i],
+         info = this.getTileInfoForPoint(point[1], point[0]),
+         offsetX = ((info.tile.x - minX) * tileSize) + info.tile.offset.x,
+         offsetY = ((info.tile.y - minY) * tileSize) + info.tile.offset.y;
+
+      info.offset = { x: offsetX, y: offsetY };
+      info.center = { x: origin.offset.x - offsetX, y: origin.offset.y - offsetY };
+      basePoints.push([info, new Float32Array(
+        ctx.getImageData(offsetX, offsetY, pointSampleSize, pointSampleSize).data.buffer
+      )]);
+    }
+    console.log('bp', basePoints, 'tps!!', tps, 'mvi!!', mvi);
+
+
     ctx.closePath();
     ctx.fillStyle = "rgba(0, 0, 0, 1)";
     ctx.fill();
     ctx.clip();
-
 
     var w = canvasEl.width,
         h = canvasEl.height,
@@ -219,6 +269,8 @@ export default L.TileLayer.extend({
     p.x.sort(function(a, b) { return a-b; });
     var n = p.x.length - 1;
 
+    var origW = w,
+        origH = h;
     w = p.x[n] - p.x[0];
     h = p.y[n] - p.y[0];
 
@@ -228,7 +280,7 @@ export default L.TileLayer.extend({
     ctx.putImageData(crop, 0, 0);
 
     var crop32 = new Float32Array(crop.data.buffer);
-    var geometry = new THREE.PlaneGeometry(60, 60, w - 1, h - 1);
+    var geometry = new THREE.PlaneGeometry(w, h, w - 1, h - 1);
     geometry.computeFaceNormals();
     geometry.computeVertexNormals();
 
@@ -240,28 +292,128 @@ export default L.TileLayer.extend({
     }
     var minPerimeterPoint = Math.min.apply(null, allPerimeterPoints);
 
+    var allBasePoints = new Float32Array(pointSampleSize * pointSampleSize * basePoints.length);
+    for(var i = 0, o = 0; i < basePoints.length; i++) {
+      for(var n = 0; n < basePoints[i][1].length; n++, o++) {
+        allBasePoints[o] = basePoints[i][1][n];
+      }
+    }
+    var minBasePoint = Math.min.apply(null, allBasePoints);
+
+
+    var minZ = Infinity, maxZ = -Infinity, minPoint = minBasePoint, scale = 5;
     for(var i = 0, l = geometry.vertices.length; i < l; i++) {
-      var val = crop32[i] - minPerimeterPoint;
-      geometry.vertices[i].z = (val > 0 ? val : 0);
+      var val = crop32[i] - minPoint;
+      minZ = minZ > crop32[i] && crop32[i] >= minPoint ? crop32[i] : minZ;
+      maxZ = maxZ < crop32[i] ? crop32[i] : maxZ;
+      geometry.vertices[i].z = (val > 0 ? val : 0) * scale;
     }
 
-    var material = new THREE.MeshPhongMaterial({
-      color: 0xdddddd,
-      wireframe: true
+    var palette = interpolate(colorbrewer.Spectral[11].reverse()), range = (maxZ - minZ) * scale;
+    for(var i = 0, l = geometry.faces.length; i < l; i++) {
+      var face = geometry.faces[i];
+      face.vertexColors = [
+        new THREE.Color(palette(geometry.vertices[face.a].z / range)),
+        new THREE.Color(palette(geometry.vertices[face.b].z / range)),
+        new THREE.Color(palette(geometry.vertices[face.c].z / range))
+      ];
+    }
+
+    this.createScene();
+    for(var i = 0; i < basePoints.length; i++) {
+      var point = basePoints[i];
+      var basePointGeometry = new THREE.SphereGeometry( 5, 32, 32 );
+      var basePointMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+      var basePointMesh = new THREE.Mesh(basePointGeometry, basePointMaterial);
+      basePointMesh.name = "basePoint" + i;
+      var zValue = point[0].zAvg = point[1].reduce(function(a, b) {
+        return a + b;
+      }, 0) / point[1].length;
+      basePointMesh.position.set(point[0].center.x * -1, point[0].center.y, (zValue - minPoint) * scale);
+      console.log(basePointMesh, 'zValue!!!', zValue);
+      var oldPoint = this.scene.getObjectByName(basePointMesh.name);
+      if(oldPoint) this.scene.remove(oldPoint);
+      this.scene.add(basePointMesh);
+    }
+
+    var targets = [], xPoints = [], yPoints = [], _originXPoints = [], _originYPoints = [], zPoints = [], fitPoints = basePoints.map(function(point) {
+      var info = point[0];
+      targets.push(info.zAvg);
+      xPoints.push(info.center.x);
+      yPoints.push(info.center.y);
+      zPoints.push(info.zAvg);
+      return [info.center.x, info.center.y, info.zAvg];
+    });
+
+    var sizeX = Math.max.apply(null, xPoints.map(Math.abs)) * 2,
+        sizeY = Math.max.apply(null, yPoints.map(Math.abs)) * 2,
+        minZ = Math.min.apply(null, zPoints),
+        maxZ = Math.max.apply(null, zPoints);
+
+    //debugger;
+    fitPoints = fitPoints.map(function(pt) {
+      return [pt[0] * -1, pt[1], pt[2]];
+    });
+    var plate = mvi.thinPlateSpline(fitPoints, 0);
+   //debugger;
+        var planeGeometry = new THREE.PlaneGeometry(sizeX, sizeY, sizeX - 1, sizeY - 1);
+        planeGeometry.computeFaceNormals();
+        planeGeometry.computeVertexNormals();
+       //debugger;
+        //for(var i = 0, l = planeGeometry.vertices.length; i < l; i++) {
+         // var coords = calculateCoordinates(i, w, h);
+          for(var i = 0, l = planeGeometry.vertices.length; i < l; i++) {
+            var y = Math.floor(i / sizeX), x = i - (y * sizeX);
+            planeGeometry.vertices[i].z = (plate(x - sizeX/2, y - sizeY/2) - minPoint) * scale;
+          }
+          /*for(var y  = 0; y < sizeY; y++) {
+            for(var x = 0; x < sizeX; x++) {
+              //console.log(plate(x, y));
+              planeGeometry.vertices[y * sizeX + x].z = (plate(x, y) - minPoint) * scale;
+            }
+          }
+          //planeGeometry.vertices[i].z = (plate(coords[0], coords[1]) - minPoint) * scale;
+        //}
+
+        /*for(var x = 0; x < sizeX; x++) {
+          for(var y = 0; y < sizeY; y++) {
+            planeGeometry.vertices[x * sizeY + y].z = (plate(x, y) - minPoint) * scale;
+          }
+        }*/
+        //for(var i = 0, l = planeGeometry.vertices.length; i < l; i++) {
+        //  planeGeometry.vertices[i].z = (plate - minPoint) * scale;
+       // }
+      var planeMaterial = new THREE.MeshBasicMaterial({
+        //vertexColors: THREE.VertexColors,
+        wireframe: true,
+        color: 0xff0000
+        //opacity: 0.2,
+        //transparent: true
+      });
+
+      var basePlane = new THREE.Mesh(planeGeometry, planeMaterial);
+      basePlane.castShadow = true;
+      basePlane.receiveShadow = true;
+      basePlane.name = "baseplane";
+      var oldPlane = this.scene.getObjectByName(basePlane.name);
+      if(oldPlane) this.scene.remove(oldPlane);
+      this.scene.add(basePlane);
+
+    var material = new THREE.MeshBasicMaterial({
+      vertexColors: THREE.VertexColors,
+      wireframe: true,
+      opacity: 0.2,
+      transparent: true
     });
     var plane = new THREE.Mesh(geometry, material);
     plane.castShadow = true;
     plane.receiveShadow = true;
     plane.name = "heightmap";
-    this.createScene();
     var oldMap = this.scene.getObjectByName(plane.name);
     if(oldMap) this.scene.remove(oldMap);
     this.camera.lookAt(plane);
 
     this.scene.add(plane);
-
-    //2147483647
-    //debugger;
 
     $(canvasEl).css({
       position: "absolute",
@@ -285,22 +437,20 @@ export default L.TileLayer.extend({
       light.shadowCameraVisible = true;
       light.position.set(0,300,100);
       scene.add(light);
-      var camera = window.camera = this.camera = new THREE.PerspectiveCamera(45, 640 / 480, 0.1, 1000);
-      //camera.position.y = -60;
+      var camera = window.camera = this.camera = new THREE.PerspectiveCamera(45, 800 / 600, 0.1, 1000);
       camera.position.z = 100;
 
-      
       var renderer = new THREE.WebGLRenderer();
-      renderer.setSize(640, 480);
+      renderer.setSize(800, 600);
       $(renderer.domElement).css({
         position: "absolute",
         right: "0px",
         bottom: "0px"
       });
       document.body.appendChild(renderer.domElement);
-      
+
       window.THREE = THREE;
-      var controls = new TrackballControls.default(camera, renderer.domElement);
+      var controls = new TrackballControls(camera, renderer.domElement);
 
       function render() {
         requestAnimationFrame(render);

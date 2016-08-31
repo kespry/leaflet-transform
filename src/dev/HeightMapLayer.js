@@ -65,7 +65,7 @@ markers.forEach(function(marker) {
 
   polyWithMarkers.on('done', function(changes) {
     console.log('done editing!', changes);
-    heightMapLayer.cropHeightMapToPoints(changes.polygon);
+    heightMapLayer.cropHeightMapToPoints(changes.polygon, changes.markers);
   });
 });
 
