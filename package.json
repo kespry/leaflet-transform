@@ -26,6 +26,7 @@
   "scripts": {
     "demo": "python -m SimpleHTTPServer 8000",
     "dev": "node dev/index.js",
+    "start": "node dev/index.js",
     "compile": "browserify src/dist.js -o dist/leaflet-transform.js -t [ babelify --presets [ es2015 ] --plugins [ transform-runtime ] ]",
     "compileWithoutLeaflet": "browserify src/dist-without-leaflet.js -o dist/leaflet-transform-without-leaflet.js -t [ babelify --presets [ es2015 ] ] -g browserify-global-shim",
     "es5": "babel --presets=es2015 -d lib/ src/",
