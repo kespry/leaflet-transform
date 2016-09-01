@@ -7,14 +7,6 @@ var layers = [];
 var markerObjects = [];
 var heightMapLayer;
 images.forEach(function(image) {
-  layers.push(L.tileLayer(image.ortho_tile_options.baseUrl + "/{z}/{x}/{y}.png", {
-    minZoom: image.ortho_tile_options.minZoom,
-    maxNativeZoom: image.ortho_tile_options.maxNativeZoom,
-    maxZoom: 25,
-    tms: true,
-    bounds: image.ortho_tile_options.bounds
-  }));
-
   var visibleHeightMapLayer = L.tileLayer('/tiles/png/{z}/{x}/{y}.png', {
     minZoom: image.ortho_tile_options.minZoom,
     maxNativeZoom: image.ortho_tile_options.maxNativeZoom,
@@ -32,7 +24,17 @@ images.forEach(function(image) {
   });
 
   layers.push(heightMapLayer);
-  layers.push(visibleHeightMapLayer);
+  
+  layers.push(L.tileLayer(image.ortho_tile_options.baseUrl + "/{z}/{x}/{y}.png", {
+    minZoom: image.ortho_tile_options.minZoom,
+    maxNativeZoom: image.ortho_tile_options.maxNativeZoom,
+    maxZoom: 25,
+    tms: true,
+    bounds: image.ortho_tile_options.bounds
+  }));
+
+  
+  //layers.push(visibleHeightMapLayer);
 });
 
 markers.forEach(function(marker) {

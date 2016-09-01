@@ -6,7 +6,6 @@ import TrackballControls from "three-trackballcontrols";
 import * as colorbrewer from "colorbrewer";
 import interpolate from "color-interpolate";
 import * as palettes from "nice-color-palettes";
-import tps from "thinplate";
 import mvi from "./mvi";
 
 export default L.TileLayer.extend({
@@ -241,7 +240,6 @@ export default L.TileLayer.extend({
         ctx.getImageData(offsetX, offsetY, pointSampleSize, pointSampleSize).data.buffer
       )]);
     }
-    console.log('bp', basePoints, 'tps!!', tps, 'mvi!!', mvi);
 
 
     ctx.closePath();
