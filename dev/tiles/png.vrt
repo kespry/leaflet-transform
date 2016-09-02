@@ -1,16 +1,16 @@
-<VRTDataset rasterXSize="10598" rasterYSize="6520">
-  <SRS>PROJCS[NAD83/Californiazone2["ftUS"],GEOGCS["NAD83",DATUM["North_American_Datum_1983",SPHEROID["GRS1980",6378137,298.2572221010002,AUTHORITY["EPSG","7019"]],AUTHORITY["EPSG","6269"]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433],AUTHORITY["EPSG","4269"]],PROJECTION["Lambert_Conformal_Conic_2SP"],PARAMETER["standard_parallel_1",39.83333333333334],PARAMETER["standard_parallel_2",38.33333333333334],PARAMETER["latitude_of_origin",37.66666666666666],PARAMETER["central_meridian",-122],PARAMETER["false_easting",6561666.667],PARAMETER["false_northing",1640416.667],UNIT["USsurveyfoot",0.3048006096012192,AUTHORITY["EPSG","9003"]],AUTHORITY["EPSG","2226"]]</SRS>
-  <GeoTransform>  6.5631127829999998e+06,  3.6505935082092927e-01,  0.0000000000000000e+00,  2.0226844299999999e+06,  0.0000000000000000e+00, -3.6505935582820831e-01</GeoTransform>
+<VRTDataset rasterXSize="4657" rasterYSize="5052">
+  <SRS>PROJCS["WGS84/UTMzone17N",GEOGCS["WGS84",DATUM["WGS_1984",SPHEROID["WGS84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433],AUTHORITY["EPSG","4326"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",-81],PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AUTHORITY["EPSG","32617"]]</SRS>
+  <GeoTransform>  3.3221853399999999e+05,  7.3737169851842241e-02,  0.0000000000000000e+00,  4.7061981080000000e+06,  0.0000000000000000e+00, -7.3737331749746018e-02</GeoTransform>
   <VRTRasterBand dataType="Byte" band="1">
     <NoDataValue>-3.27670000000000E+04</NoDataValue>
     <HideNoDataValue>1</HideNoDataValue>
     <ColorInterp>Red</ColorInterp>
     <ComplexSource>
-      <SourceFilename relativeToVRT="1">77dfbe43bcfd7710f3a21bf459c175bd.png</SourceFilename>
+      <SourceFilename relativeToVRT="1">979c5c616f5988c0ff45a96baefe0879.png</SourceFilename>
       <SourceBand>1</SourceBand>
-      <SourceProperties RasterXSize="10598" RasterYSize="6520" DataType="Byte" BlockXSize="10598" BlockYSize="1" />
-      <SrcRect xOff="0" yOff="0" xSize="10598" ySize="6520" />
-      <DstRect xOff="0" yOff="0" xSize="10598" ySize="6520" />
+      <SourceProperties RasterXSize="4657" RasterYSize="5052" DataType="Byte" BlockXSize="4657" BlockYSize="1" />
+      <SrcRect xOff="0" yOff="0" xSize="4657" ySize="5052" />
+      <DstRect xOff="0" yOff="0" xSize="4657" ySize="5052" />
       <NODATA>-32767</NODATA>
     </ComplexSource>
   </VRTRasterBand>
@@ -19,11 +19,11 @@
     <HideNoDataValue>1</HideNoDataValue>
     <ColorInterp>Green</ColorInterp>
     <ComplexSource>
-      <SourceFilename relativeToVRT="1">77dfbe43bcfd7710f3a21bf459c175bd.png</SourceFilename>
+      <SourceFilename relativeToVRT="1">979c5c616f5988c0ff45a96baefe0879.png</SourceFilename>
       <SourceBand>2</SourceBand>
-      <SourceProperties RasterXSize="10598" RasterYSize="6520" DataType="Byte" BlockXSize="10598" BlockYSize="1" />
-      <SrcRect xOff="0" yOff="0" xSize="10598" ySize="6520" />
-      <DstRect xOff="0" yOff="0" xSize="10598" ySize="6520" />
+      <SourceProperties RasterXSize="4657" RasterYSize="5052" DataType="Byte" BlockXSize="4657" BlockYSize="1" />
+      <SrcRect xOff="0" yOff="0" xSize="4657" ySize="5052" />
+      <DstRect xOff="0" yOff="0" xSize="4657" ySize="5052" />
       <NODATA>-32767</NODATA>
     </ComplexSource>
   </VRTRasterBand>
@@ -32,11 +32,11 @@
     <HideNoDataValue>1</HideNoDataValue>
     <ColorInterp>Blue</ColorInterp>
     <ComplexSource>
-      <SourceFilename relativeToVRT="1">77dfbe43bcfd7710f3a21bf459c175bd.png</SourceFilename>
+      <SourceFilename relativeToVRT="1">979c5c616f5988c0ff45a96baefe0879.png</SourceFilename>
       <SourceBand>3</SourceBand>
-      <SourceProperties RasterXSize="10598" RasterYSize="6520" DataType="Byte" BlockXSize="10598" BlockYSize="1" />
-      <SrcRect xOff="0" yOff="0" xSize="10598" ySize="6520" />
-      <DstRect xOff="0" yOff="0" xSize="10598" ySize="6520" />
+      <SourceProperties RasterXSize="4657" RasterYSize="5052" DataType="Byte" BlockXSize="4657" BlockYSize="1" />
+      <SrcRect xOff="0" yOff="0" xSize="4657" ySize="5052" />
+      <DstRect xOff="0" yOff="0" xSize="4657" ySize="5052" />
       <NODATA>-32767</NODATA>
     </ComplexSource>
   </VRTRasterBand>
@@ -45,11 +45,11 @@
     <HideNoDataValue>1</HideNoDataValue>
     <ColorInterp>Alpha</ColorInterp>
     <ComplexSource>
-      <SourceFilename relativeToVRT="1">77dfbe43bcfd7710f3a21bf459c175bd.png</SourceFilename>
+      <SourceFilename relativeToVRT="1">979c5c616f5988c0ff45a96baefe0879.png</SourceFilename>
       <SourceBand>4</SourceBand>
-      <SourceProperties RasterXSize="10598" RasterYSize="6520" DataType="Byte" BlockXSize="10598" BlockYSize="1" />
-      <SrcRect xOff="0" yOff="0" xSize="10598" ySize="6520" />
-      <DstRect xOff="0" yOff="0" xSize="10598" ySize="6520" />
+      <SourceProperties RasterXSize="4657" RasterYSize="5052" DataType="Byte" BlockXSize="4657" BlockYSize="1" />
+      <SrcRect xOff="0" yOff="0" xSize="4657" ySize="5052" />
+      <DstRect xOff="0" yOff="0" xSize="4657" ySize="5052" />
       <NODATA>-32767</NODATA>
     </ComplexSource>
   </VRTRasterBand>
